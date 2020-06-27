@@ -133,7 +133,7 @@ def sortBy(sortVal, videos):
 
 # Get all Video documents
 @video.route('/getvideo', methods=['GET'])
-@jwt_required
+# @jwt_required
 def getVideo():
     if "video" not in db.list_collection_names():
         return jsonify([]), 200
@@ -143,7 +143,7 @@ def getVideo():
 
 # Get Video by id
 @video.route('/getvideobyid/<oid>', methods=['GET'])
-@jwt_required
+# @jwt_required
 def getVideoById(oid):
     if oid == None:
             return jsonify({"success": False, "message": "No Object Id in param."}), 400
@@ -156,7 +156,7 @@ def getVideoById(oid):
 
 # Returns videos for a search query
 @video.route('/search', methods=['POST'])
-@jwt_required
+# @jwt_required
 def getVideoSearch():
     data = json.loads(request.data)
     search = data.get("search")
@@ -172,7 +172,7 @@ def getVideoSearch():
         return dumps(items), 200
 
 @video.route('/filter', methods=['POST'])
-@jwt_required
+# @jwt_required
 def getVideoFilter():
     data = json.loads(request.data)
     filter = data.get("filter")
@@ -192,7 +192,7 @@ def getVideoFilter():
 
 # Upload a video to the database
 @video.route('/addvideo', methods=['POST'])
-@jwt_required
+# @jwt_required
 def addVideo():
     file = request.files['video']
     timestamp = request.form.get("time")
@@ -296,7 +296,7 @@ def updateVideo():
 
 # Update Video Location
 @video.route('/updatevideolocation', methods=['PATCH'])
-@jwt_required
+# @jwt_required
 def updateVideoLocation():
     data = json.loads(request.data)
     video_id = data.get("video_id")
@@ -320,7 +320,7 @@ def updateVideoLocation():
     
 # Update Video Timestamp
 @video.route('/updatevideotimestamp', methods=['PATCH'])
-@jwt_required
+# @jwt_required
 def updateVideoTimestamp():
     data = json.loads(request.data)
     video_id = data.get("video_id")
@@ -358,7 +358,7 @@ def updateVideoTimestamp():
 
 # Delete Video by id
 @video.route('/deletevideo/<oid>', methods=['DELETE'])
-@jwt_required
+# @jwt_required
 def deleteVideo(oid):
     if oid == None:
             return jsonify({"success": False, "message": "No Object Id in param."}), 400

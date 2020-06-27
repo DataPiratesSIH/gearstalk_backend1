@@ -14,7 +14,7 @@ process = Blueprint('process', __name__)
 executor = Executor()
 
 @process.route('/processvideo/<oid>', methods=['GET'])
-@jwt_required
+# @jwt_required
 def processVideo(oid):
     print(oid)
     if oid == None or len(oid) != 24:

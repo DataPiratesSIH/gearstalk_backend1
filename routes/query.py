@@ -86,7 +86,7 @@ def searchFunction(metadata, features, colors):
 
 #returns list of best matches from the metadata
 @query.route('/textarea', methods=['POST'])
-@jwt_required
+# @jwt_required
 def textarea():
     try:
         data = request.get_json()
@@ -119,7 +119,7 @@ def textarea():
 
 #returns metadata of the whole video 
 @query.route('/metadata', methods=['POST'])
-@jwt_required
+# @jwt_required
 def video_search():
     try:
         data = request.get_json()
@@ -133,7 +133,7 @@ def video_search():
 
 #returns a list of best matches from the given video_id
 @query.route('/metadata_search', methods=['POST'])
-@jwt_required
+# @jwt_required
 def video_search():
     try:
         data = request.get_json()
@@ -157,7 +157,7 @@ def video_search():
 
 #returns best match in a given interval of time
 @query.route('/metadata_search', methods=['POST'])
-@jwt_required
+# @jwt_required
 def time_search():
     try:
         data = request.get_json()
