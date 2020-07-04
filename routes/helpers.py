@@ -23,6 +23,8 @@ def after_request(response):
 
 @helpers.route('/file/<fileid>') 
 def file(fileid):
+    if len(fileid) != 24:
+        return jsonify({"message": "Bad Request"}), 206
     oid = ObjectId(fileid)
     grid_out = fs.open_download_stream(oid)
     contents = grid_out.read()
@@ -31,6 +33,8 @@ def file(fileid):
 ## Byte Streaming for Video
 @helpers.route('video/<fileid>')
 def video(fileid):
+    if len(fileid) != 24:
+        return jsonify({"message": "Bad Request"}), 206
     oid = ObjectId(fileid)
     grid_out = fs.open_download_stream(oid)
 
