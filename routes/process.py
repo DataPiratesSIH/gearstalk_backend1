@@ -7,9 +7,8 @@ import numpy as np
 import itertools
 from bson import ObjectId
 from utils.connect import db, fs
-from utils.utils import getFrame, randomString, processor, UniquePersonSearch
+from utils.utils import getFrame, randomString, processor
 from flask_executor import Executor
-import asyncio
 import datetime
 import json
 
@@ -18,7 +17,25 @@ features_pack = {}
 process = Blueprint('process', __name__)
 executor = Executor()
 
-frame_rate = 10
+
+
+'''------------------------------------------------
+        Finding unique persons from the video
+--------------------------------------------------'''
+#todo
+#find the unique person in video (traverse sequentially)
+##find the similarity between 2 frames based on labels
+##check the similarity betwen them using box sizes
+#Save into db twice at 2 different locations (Whole video_output and unique_person)
+def UniquePersonSearch(video_id, video_output):
+    return "ok"
+
+
+
+
+'''------------------------------------------------
+    breaking video down to frames and processing
+--------------------------------------------------'''
 
 @process.route('/processvideo/<oid>', methods=['GET'])
 # @jwt_required
@@ -44,11 +61,17 @@ def processVideo(oid):
 
 
 
-@process.route('/FindUnique', methods=['GET'])
+
+'''------------------------------------------------
+    Reciving video output in chunks from backend2
+--------------------------------------------------'''
+
+@process.route('/FindUnique', methods=['POST'])
 def FindUnique():
-    data = request.json
+    data = json.loads(request.data)
     video_id = data['video_id']
     frame_sec = data['frame_sec']
+    timestamp = data['timestamp']
     total_frames = int(data['total_frames'])
     frame_details = data['frame_details']
     
@@ -67,24 +90,14 @@ def FindUnique():
     
     return jsonify({"status": "recieving data", "feature_array":"{}".format(features_pack)}), 200
 
-# '''
-# for testing only
 
 
-async def resp():
-    return response.json("OK", status=202)
 
+'''------------------------------------------------
+                for testing only
+--------------------------------------------------'''
 
-def blocking_function(files):
-    requests.post("https://unlucky-octopus-2.serverless.social/FashionFrame", files=files)
-    # async with aiohttp.ClientSession() as session:
-    #     async with session.post("https://unlucky-octopus-2.serverless.social/FashionFrame", files=files) as resp:
-    #         result = await resp.text()
-    #         print(result)
-    # return "ok"
-    # await put_in_database(result)
-
-
+'''
 @process.route('/video', methods=['POST'])
 def Video():
     path = "C:\\Users\\Lenovo\\Downloads\\Documents\\GitHub\\yolo_textiles\\videos\\airport.mp4"
@@ -93,22 +106,18 @@ def Video():
 
     vidcap = cv2.VideoCapture(path)
     sec = 0
-    frameRate = 10
+    frameRate = 0.5
     count = 1
     total_frames = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)//(frameRate*vidcap.get(cv2.CAP_PROP_FPS)) + 1
     print(total_frames)   
     success = getFrame(vidcap,oid,sec,timestamp,total_frames)
     while success:
-        # print(files)
-        # blocking_function(files)
         sec = sec + frameRate
         sec = round(sec, 2)
         success = getFrame(vidcap,oid,sec,timestamp,total_frames)
 
     vidcap.release()
     print('Finished entire process')
-    # executor.submit(processor)
-    # return resp()
     return jsonify({"status": "Video will be processed in a while!"}), 200
 
-# '''
+'''

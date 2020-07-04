@@ -5,12 +5,9 @@ from .rabbitmq import rabbitmq_bridge
 import random
 import string
 from bson import ObjectId
-from utils.connect import LOAD_BALANCER_URL
 from werkzeug.wsgi import ClosingIterator
 from traceback import print_exc
 import numpy as np
-import asyncio
-import aiohttp
 
 ALLOWED_EXTENSIONS = ['mp4','avi','jpeg','png']
 
@@ -50,18 +47,6 @@ class AfterResponseMiddleware:
             return iterator
 
 
-class NumpyEncoder(json.JSONEncoder):
-    """ Special json encoder for numpy types """
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
-
-
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -69,18 +54,13 @@ def allowed_file(filename):
 
 
 
-def UniquePersonSearch(video_id, video_output):
-    return "ok"
-
-import sys
-
 def getFrame(vidcap,video_id,sec,timestamp,total_frames):
     vidcap.set(cv2.CAP_PROP_POS_MSEC,sec*1000)
     hasFrames,image = vidcap.read()
 
     if hasFrames:
         string = cv2.imencode('.png', image )[1]
-        files = json.dumps(string, cls=NumpyEncoder)
+        files = base64.b64encode(string).decode()
 
         data = {
             "video_id" : video_id,
@@ -90,21 +70,17 @@ def getFrame(vidcap,video_id,sec,timestamp,total_frames):
             "photo": files
         }
 
+
+        '''
         # files = [
         #     ('photo', ("frame.png", string, 'application/octet')),                          #wrapping json data and image-file into a single file
         #     ('data', ('data', json.dumps(data), 'application/json')),
         # ]
-        # print(files)
 
-
-
-        '''
         #sending files without rabbitmq(faster)
         # r = requests.post(LOAD_BALANCER_URL, files=files)                                 #add after hosting load_balancer
         # r = requests.post("https://angry-dodo-93.serverless.social/FashionFrame", files=files)
         '''
-        
-
 
         #to use rabbitmq for sending(slower...bt no frames r lost)
         rabbitmq_bridge(data)
@@ -135,11 +111,13 @@ def processor(oid,file_id,timestamp):
         sec = 0
 
         frameRate = 0.5                                                         # it will capture image in each 0.5 second
-        success = getFrame(vidcap,oid,sec,timestamp)
+        total_frames = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)//(frameRate*vidcap.get(cv2.CAP_PROP_FPS)) + 1
+
+        success = getFrame(vidcap,oid,sec,timestamp,total_frames)
         while success:
             sec = sec + frameRate
             sec = round(sec, 2)
-            success = getFrame(vidcap,oid,sec,timestamp)
+            success = getFrame(vidcap,oid,sec,timestamp,total_frames)
 
         vidcap.release()
 
