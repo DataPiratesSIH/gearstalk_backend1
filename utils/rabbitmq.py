@@ -1,20 +1,20 @@
 import pika
 import json
+# import socket
+# socket.getaddrinfo('localhost', 3000)
 
 ''' todo: fix file sending through rabbit'''
 
-def rabbitmq_bridge(file,url):
+
+def rabbitmq_bridge(data):
     credentials = pika.PlainCredentials('test', 'test')
 
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host='127.0.1.1', credentials=credentials))                       #load_balancer url/ip in (host)
+        pika.ConnectionParameters(host='https://809d71900562.ngrok.io/FashionFrame', credentials=credentials))                       #load_balancer url/ip in (host)
     channel = connection.channel()
 
     channel.queue_declare(queue='video_frame')
 
-    # data = {
-    #     "img" : file,
-    # }
     message = json.dumps(data, ensure_ascii=False, indent=4)
     
     channel.basic_publish(exchange='', routing_key='video_frame', body=message)

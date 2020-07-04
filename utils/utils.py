@@ -8,6 +8,9 @@ from bson import ObjectId
 from utils.connect import LOAD_BALANCER_URL
 from werkzeug.wsgi import ClosingIterator
 from traceback import print_exc
+import numpy as np
+import asyncio
+import aiohttp
 
 ALLOWED_EXTENSIONS = ['mp4','avi','jpeg','png']
 
@@ -46,36 +49,68 @@ class AfterResponseMiddleware:
             print_exc()
             return iterator
 
+
+class NumpyEncoder(json.JSONEncoder):
+    """ Special json encoder for numpy types """
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
+
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def getFrame(vidcap,video_id,sec,timestamp):
+
+def UniquePersonSearch(video_id, video_output):
+    return "ok"
+
+import sys
+
+def getFrame(vidcap,video_id,sec,timestamp,total_frames):
     vidcap.set(cv2.CAP_PROP_POS_MSEC,sec*1000)
     hasFrames,image = vidcap.read()
 
     if hasFrames:
-        string = base64.b64encode(cv2.imencode('.png', image)[1]).decode()
+        string = cv2.imencode('.png', image )[1]
+        files = json.dumps(string, cls=NumpyEncoder)
+
         data = {
             "video_id" : video_id,
+            "frame_sec": sec,
+            "total_frames": total_frames,
             "timestamp": timestamp,
-            "frame_sec": sec
+            "photo": files
         }
-        # np.save(open("frame.npy","wb+"), image)                                           #faster method(todo)
-        # print(sec)
-        files = [
-            ('photo', ("frame.png", string, 'application/octet')),                          #wrapping json data and image-file into a single file
-            ('data', ('data', json.dumps(data), 'application/json')),
-        ]
 
+        # files = [
+        #     ('photo', ("frame.png", string, 'application/octet')),                          #wrapping json data and image-file into a single file
+        #     ('data', ('data', json.dumps(data), 'application/json')),
+        # ]
+        # print(files)
+
+
+
+        '''
         #sending files without rabbitmq(faster)
         # r = requests.post(LOAD_BALANCER_URL, files=files)                                 #add after hosting load_balancer
-        print(sec)
+        # r = requests.post("https://angry-dodo-93.serverless.social/FashionFrame", files=files)
+        '''
+        
+
 
         #to use rabbitmq for sending(slower...bt no frames r lost)
-        # rabbitmq_bridge(files,urls)
+        rabbitmq_bridge(data)
+
     return hasFrames
+
 
 def processor(oid,file_id,timestamp):
     # sleep(5)
@@ -112,7 +147,7 @@ def processor(oid,file_id,timestamp):
                         end
         -----------------------------------'''
 
-        print("Processing Done. Now Removing Video.")
+        print("Video is being Processed. Removing Video.")
         if os.path.exists(video_name):
             os.remove(video_name)
 
