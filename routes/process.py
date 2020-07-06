@@ -11,13 +11,15 @@ from utils.utils import getFrame, randomString, processor
 from flask_executor import Executor
 import datetime
 import json
+import collections
+import ast
 
 features_pack = {}
 
 process = Blueprint('process', __name__)
 executor = Executor()
 
-
+frame_rate = 0.5
 
 '''------------------------------------------------
         Finding unique persons from the video
@@ -28,7 +30,28 @@ executor = Executor()
 ##check the similarity betwen them using box sizes
 #Save into db twice at 2 different locations (Whole video_output and unique_person)
 def UniquePersonSearch(video_id, video_output):
-    return "ok"
+    
+    #Saving all the frames into the db
+    db.features.insert_many(video_output)
+
+    #converting to 3d-Array
+    array3d=[]
+    array3d = [collections.Counter([ str(feature['labels']+feature['colors'])  for feature in data['persons']]) for data in object_data]
+    unique_person = []
+
+    #Finding the Unique ones
+    for i in range(len(array3d)-1):
+        person = array3d[i]-array3d[i+1]
+        if person:
+            for k in person :
+                unique_person.append({'last_seen': i*frame_rate,'labels': ast.literal_eval(k)})
+    for k in array3d[len(array3d)-1]:
+        unique_person.append({'last_seen': (i+1)*frame_rate,'labels': ast.literal_eval(k)})
+    
+    #Saving the unique persons into db
+    db.unique_person.insert_many(unique_person)
+
+    return "Your video is processed"
 
 
 
@@ -74,6 +97,7 @@ def FindUnique():
     timestamp = data['timestamp']
     total_frames = int(data['total_frames'])
     frame_details = data['frame_details']
+    message = "Video Processing not over!!"
     
     if video_id in features_pack.keys():
         features_pack[video_id][int(frame_sec//frame_rate)] =  {"frame_sec":frame_sec,"persons":frame_details}
@@ -84,11 +108,10 @@ def FindUnique():
     
     if None not in features_pack[video_id]:
         video_output = features_pack.pop(video_id)
-        UniquePersonSearch(video_id,video_output)
-    # arr.append(frame_sec)
-    print(features_pack)
+        message = UniquePersonSearch(video_id,video_output)
+
     
-    return jsonify({"status": "recieving data", "feature_array":"{}".format(features_pack)}), 200
+    return jsonify({"status": message), 200
 
 
 
