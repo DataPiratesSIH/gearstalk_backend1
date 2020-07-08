@@ -1,6 +1,8 @@
 import os
 import time
-import json,requests
+import itertools
+import json
+import requests
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from utils.connect import client, db, fs
@@ -10,26 +12,102 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 from bson.json_util import dumps
 from utils.utils import getFirstFrame, allowed_file, randomString
+from collections import Counter
 
 video = Blueprint("video", __name__)
 
 record = ['None', 'Today', 'This Week', 'This Month', 'This Year']
-duration = ['None', 'Short (<4 minutes)', 'Medium (>4 minutes and <20 minutes)', 'Long (>20 minutes)']
+duration = ['None', 'Short (<4 minutes)',
+            'Medium (>4 minutes and <20 minutes)', 'Long (>20 minutes)']
 sort = ['Relevance', 'Upload Date', 'Duration']
 typeOf = ['None', 'Processed', 'Unprocessed']
 
+'''-----------------------------------
+            visualization
+-----------------------------------'''
+
+# method to get data from the database to the javascript of the line graph.
+@video.route('/visual/<oid>', methods=['GET'])
+def makeCharts(oid):
+    # oid = "5ef4dc433f16cd00b13a67e8"
+    if oid == None or len(oid) != 24:
+        return jsonify({"success": False, "message": "No Object Id in param."}), 400
+    feature = db.features.find_one({"_id": ObjectId(oid)})
+    frame_sec_array = []
+    labels_array = []
+    line_chart = []
+    big_data = []
+    big_data2 = []
+    y_axis = []
+    x_axis = []
+    object_demo = feature["metadata"]
+    for object_small in object_demo:
+        frame_sec = object_small["frame_sec"]
+        x_axis.append(frame_sec)
+        cnt = Counter()
+        key_array = []
+        value_array = []
+        dict_array = []
+        x = []
+        dict_new = {}
+        person = object_small["persons"]
+        person1 = json.loads(person)
+        y_axis.append(len(person1))
+        for i in person1:
+            x.append(i["labels"])
+        merged = list(itertools.chain(*x))
+
+        for i in merged:
+            cnt[i] += 1
+        new_cnt = dict(cnt)
+
+        for key, value in new_cnt.items():
+            key_array.append(key)
+            value_array.append(value)
+
+        for i in range(len(key_array)):
+            res = {"labels": key_array[i], "count": value_array[i]}
+            dict_new.update({key_array[i]: value_array[i]})
+            # print(res)
+            dict_array.append(res)
+        # # print(dict_array)
+        line_dict = {"date": frame_sec, "value": len(person1)}
+        dict_new2 = {"frame_sec": frame_sec, "Number of People": len(
+            person1), "feature_label": dict_array}
+        big_data.append(dict_new2)
+        line_chart.append(line_dict)
+        big_data2.append(dict_new)
+
+    counter = Counter()
+    for d in big_data2:
+        counter.update(d)
+
+    result = dict(counter)
+    for key, value in result.items():
+        res = {"category": key, "value1": value}
+        labels_array.append(res)
+
+    return jsonify({"linechart": line_chart, "big_data": big_data, "labels_array": labels_array}), 200
+
+
+'''-----------------------------------
+            end
+-----------------------------------'''
+
+
 def sameWeek(dateString):
-    d1 = datetime.strptime(dateString,'%Y-%m-%d')
+    d1 = datetime.strptime(dateString, '%Y-%m-%d')
     d2 = datetime.today()
     return d1.isocalendar()[1] == d2.isocalendar()[1] \
-            and d1.year == d2.year
+        and d1.year == d2.year
+
 
 def sameMonth(dateString):
-    d1 = datetime.strptime(dateString,'%Y-%m-%d')
+    d1 = datetime.strptime(dateString, '%Y-%m-%d')
     d2 = datetime.today()
     print(d1.month, d2.month)
     return d1.month == d2.month \
-            and d1.year == d2.year
+        and d1.year == d2.year
 
 
 def filterNone(filter):
@@ -37,6 +115,7 @@ def filterNone(filter):
         return None
     else:
         return True
+
 
 def filterByRecord(recordVal, videos):
     if recordVal == record[0]:
@@ -63,11 +142,12 @@ def filterByRecord(recordVal, videos):
     elif recordVal == record[4]:
         items = []
         for v in videos:
-            if datetime.strptime(v['date'],'%Y-%m-%d').year == datetime.today().year:
+            if datetime.strptime(v['date'], '%Y-%m-%d').year == datetime.today().year:
                 items.append(v)
         return items
     else:
         return videos
+
 
 def filterByDuration(durationVal, videos):
     if durationVal == duration[0]:
@@ -82,7 +162,7 @@ def filterByDuration(durationVal, videos):
         items = []
         for v in videos:
             if int(v['duration'][0:2]) * 60 + int(v['duration'][3:5]) > 4 \
-             and int(v['duration'][0:2]) * 60 + int(v['duration'][3:5]) < 20:
+                    and int(v['duration'][0:2]) * 60 + int(v['duration'][3:5]) < 20:
                 items.append(v)
         return items
     elif durationVal == duration[3]:
@@ -93,6 +173,7 @@ def filterByDuration(durationVal, videos):
         return items
     else:
         return videos
+
 
 def filterByType(typeVal, videos):
     if typeVal == typeOf[0]:
@@ -112,16 +193,19 @@ def filterByType(typeVal, videos):
     else:
         return videos
 
+
 def sortBy(sortVal, videos):
     if sortVal == sort[0]:
         return videos
     elif sortVal == sort[1]:
-        videos.sort(key=lambda x: datetime.strptime(x['date'], '%Y-%m-%d'), reverse=True)
+        videos.sort(key=lambda x: datetime.strptime(
+            x['date'], '%Y-%m-%d'), reverse=True)
         for v in videos:
             print(v['date'])
         return videos
     elif sortVal == sort[2]:
-        videos.sort(key=lambda x: int(x['duration'][0:2]) * 3600 + int(x['duration'][3:5]) * 60 + int(x['duration'][6:8]), reverse=True)
+        videos.sort(key=lambda x: int(x['duration'][0:2]) * 3600 + int(
+            x['duration'][3:5]) * 60 + int(x['duration'][6:8]), reverse=True)
         return videos
     else:
         return videos
@@ -132,6 +216,8 @@ def sortBy(sortVal, videos):
 -----------------------------------'''
 
 # Get all Video documents
+
+
 @video.route('/getvideo', methods=['GET'])
 # @jwt_required
 def getVideo():
@@ -142,19 +228,23 @@ def getVideo():
         return dumps(videos), 200
 
 # Get Video by id
+
+
 @video.route('/getvideobyid/<oid>', methods=['GET'])
 # @jwt_required
 def getVideoById(oid):
     if oid == None:
-            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+        return jsonify({"success": False, "message": "No Object Id in param."}), 400
     else:
         if "video" not in db.list_collection_names():
             return jsonify({"success": False, "message": "No Collection video."}), 404
         else:
-            video = db.video.find_one({ "_id": ObjectId(oid)})
+            video = db.video.find_one({"_id": ObjectId(oid)})
             return dumps(video), 200
 
 # Returns videos for a search query
+
+
 @video.route('/search', methods=['POST'])
 # @jwt_required
 def getVideoSearch():
@@ -170,6 +260,7 @@ def getVideoSearch():
                 items.append(v)
 
         return dumps(items), 200
+
 
 @video.route('/filter', methods=['POST'])
 # @jwt_required
@@ -191,6 +282,8 @@ def getVideoFilter():
         return dumps(videos), 200
 
 # Upload a video to the database
+
+
 @video.route('/addvideo', methods=['POST'])
 # @jwt_required
 def addVideo():
@@ -204,7 +297,7 @@ def addVideo():
         process = True
     else:
         process = False
-    if file and allowed_file(file.filename):    
+    if file and allowed_file(file.filename):
         if file.filename == None:
             filename = "Unknown_video"
         else:
@@ -224,7 +317,7 @@ def addVideo():
             "success": False,
             "message": "Timestamp is invalid. Please try again!"
         }), 403
-        
+
     oid = fs.upload_from_stream(filename, file)
     video_name = 'saves/' + randomString() + '.mp4'
     f = open(video_name, 'wb+')
@@ -262,9 +355,10 @@ def addVideo():
         os.remove(video_name)
 
     return jsonify({
-        "success": True, 
+        "success": True,
         "message": "Video successfully uploaded"
     }), 200
+
 
 '''
 # Update Video by id
@@ -295,6 +389,8 @@ def updateVideo():
 '''
 
 # Update Video Location
+
+
 @video.route('/updatevideolocation', methods=['PATCH'])
 # @jwt_required
 def updateVideoLocation():
@@ -304,21 +400,24 @@ def updateVideoLocation():
     if video_id == None or location_id == None:
         return jsonify({"success": False, "message": "Fields are empty."}), 401
     try:
-        location = db.cctv.find_one({ "_id": ObjectId(location_id)})
+        location = db.cctv.find_one({"_id": ObjectId(location_id)})
     except Exception as e:
         print(e)
         return jsonify({"success": False, "message": "Camera not found in database."}), 401
-    result = db.video.update_one({"_id": ObjectId(video_id)}, { "$set": { "location_id": str(location["_id"]) } })
+    result = db.video.update_one({"_id": ObjectId(video_id)}, {
+                                 "$set": {"location_id": str(location["_id"])}})
     if result.matched_count == 0:
         return jsonify({"success": False, "message": "ObjectId cannot be found."}), 404
     elif result.modified_count == 0:
-        video = db.video.find_one({ "_id": ObjectId(video_id)})
+        video = db.video.find_one({"_id": ObjectId(video_id)})
         return dumps(video), 201
     else:
-        video = db.video.find_one({ "_id": ObjectId(video_id)})
+        video = db.video.find_one({"_id": ObjectId(video_id)})
         return dumps(video), 200
-    
+
 # Update Video Timestamp
+
+
 @video.route('/updatevideotimestamp', methods=['PATCH'])
 # @jwt_required
 def updateVideoTimestamp():
@@ -342,31 +441,33 @@ def updateVideoTimestamp():
             "message": "Timestamp is invalid. Please try again!"
         }), 403
     result = db.video.update_one(
-            {"_id": ObjectId(video_id)}, 
-            { "$set": { 
-                "date": str(date_time_obj.date()),
-                "time": str(date_time_obj.time()) 
-            } })
+        {"_id": ObjectId(video_id)},
+        {"$set": {
+            "date": str(date_time_obj.date()),
+            "time": str(date_time_obj.time())
+        }})
     if result.matched_count == 0:
         return jsonify({"success": False, "message": "ObjectId cannot be found."}), 404
     elif result.modified_count == 0:
-        video = db.video.find_one({ "_id": ObjectId(video_id)})
+        video = db.video.find_one({"_id": ObjectId(video_id)})
         return dumps(video), 201
     else:
-        video = db.video.find_one({ "_id": ObjectId(video_id)})
+        video = db.video.find_one({"_id": ObjectId(video_id)})
         return dumps(video), 200
 
 # Delete Video by id
+
+
 @video.route('/deletevideo/<oid>', methods=['DELETE'])
 # @jwt_required
 def deleteVideo(oid):
     if oid == None:
-            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+        return jsonify({"success": False, "message": "No Object Id in param."}), 400
     else:
         if "video" not in db.list_collection_names():
             return jsonify({"success": False, "message": "No Collection video."}), 404
         else:
-            video = db.video.find_one({ "_id": ObjectId(oid)})
+            video = db.video.find_one({"_id": ObjectId(oid)})
             try:
                 fs.delete(ObjectId(video["file_id"]))
                 fs.delete(ObjectId(video["thumbnail_id"]))
@@ -376,7 +477,5 @@ def deleteVideo(oid):
             result = db.video.delete_one({"_id": ObjectId(oid)})
             if (result.deleted_count) > 0:
                 return jsonify({"success": True, "message": "Video successfully deleted."}), 200
-            else: 
+            else:
                 return jsonify({"success": False, "message": "Video with provided id doesn't exist."}), 404
-
-

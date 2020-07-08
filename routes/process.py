@@ -111,7 +111,7 @@ def FindUnique():
         message = UniquePersonSearch(video_id,video_output)
 
     
-    return jsonify({"status": message), 200
+    return jsonify({"status": message}), 200
 
 
 
