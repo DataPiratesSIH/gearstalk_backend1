@@ -5,7 +5,7 @@ from gridfs import GridFSBucket
 import googlemaps
 
 load_dotenv()
-CONNECTION_STRING = os.getenv("MONGODB_STRING")
+CONNECTION_STRING = os.getenv("MONGODB_STRING_CLOUD")
 GOOGLEMAPS_KEY = os.getenv("GOOGLE_MAPS_KEY")
 LOAD_BALANCER_URL = os.getenv("HAPROXY_URL")
 
