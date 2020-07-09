@@ -10,6 +10,7 @@ from traceback import print_exc
 import numpy as np
 
 ALLOWED_EXTENSIONS = ['mp4','avi','jpeg','png']
+frame_rate = 0.5
 
 class AfterResponse:
     def __init__(self, application=None):
@@ -110,12 +111,12 @@ def processor(oid,file_id,timestamp):
         vidcap = cv2.VideoCapture(video_name)
         sec = 0
 
-        frameRate = 0.5                                                         # it will capture image in each 0.5 second
-        total_frames = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)//(frameRate*vidcap.get(cv2.CAP_PROP_FPS)) + 1
+        frame_rate = 0.5                                                         # it will capture image in each 0.5 second
+        total_frames = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)//(frame_rate*vidcap.get(cv2.CAP_PROP_FPS)) + 1
 
         success = getFrame(vidcap,oid,sec,timestamp,total_frames)
         while success:
-            sec = sec + frameRate
+            sec = sec + frame_rate
             sec = round(sec, 2)
             success = getFrame(vidcap,oid,sec,timestamp,total_frames)
 
