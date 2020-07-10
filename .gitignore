@@ -1,6 +1,5 @@
 /env/
 /instance/
 /saves/
-/routes/__pycache__/
-/utils/__pycache__/
 /venv
+/__pycache__
