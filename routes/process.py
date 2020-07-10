@@ -63,7 +63,7 @@ def UniquePersonSearch(video_id, video_output):
 @process.route('/processvideo/<oid>', methods=['GET'])
 # @jwt_required
 def processVideo(oid):
-    print(oid,db.list_collection_names())
+    print(oid)
     if oid == None or len(oid) != 24:
         return jsonify({"success": False, "message": "No Object Id in param."}), 400
     elif "video" not in db.list_collection_names():
@@ -78,12 +78,43 @@ def processVideo(oid):
             #save timestamp info in the video collection
             date = video['date']
             time = video['time']
-            timestamp = json.dumps(datetime.strptime( date+time, '%Y-%m-%d%H:%M:%S'))
+            timestamp = json.dumps(datetime.strptime( date+time, '%Y-%m-%d%H:%M:%S'),ensure_ascii=False, indent=4, default=str)
             file_id = video["file_id"]
             processor(oid,file_id,timestamp)
             executor.submit(processor)
-            db.video.update({ "_id": ObjectId(oid) }, { "$set": { "processed" : "processing" }})
+            # db.video.update({ "_id": ObjectId(oid) }, { "$set": { "processed" : "processing" }})
             return jsonify({"success": True, "message": "Video will be processed in a while!"}), 200
+
+
+
+'''------------------------------------------------
+    breaking video down to frames and processing
+--------------------------------------------------'''
+
+# @process.route('/processimage/<oid>', methods=['GET'])
+# # @jwt_required
+# def processVideo(oid):
+#     print(oid)
+#     if oid == None or len(oid) != 24:
+#         return jsonify({"success": False, "message": "No Object Id in param."}), 400
+#     elif "video" not in db.list_collection_names():
+#         return jsonify({"success": False, "message": "No Collection video."}), 404
+#     else:
+#         video = db.video.find_one({ "_id": ObjectId(oid)}) 
+#         if video['processed'] == True:
+#             return jsonify({"success": False, "message": "Video is already processed."}), 404
+#         elif video['processed'] == "processing":
+#             return jsonify({"success": False, "message": "Video is currently being processed."}), 404
+#         else:
+#             #save timestamp info in the video collection
+#             date = video['date']
+#             time = video['time']
+#             timestamp = json.dumps(datetime.strptime( date+time, '%Y-%m-%d%H:%M:%S'),ensure_ascii=False, indent=4, default=str)
+#             file_id = video["file_id"]
+#             processor(oid,file_id,timestamp)
+#             executor.submit(processor)
+#             # db.video.update({ "_id": ObjectId(oid) }, { "$set": { "processed" : "processing" }})
+#             return jsonify({"success": True, "message": "Video will be processed in a while!"}), 200
 
 
 
@@ -97,15 +128,19 @@ def FindUnique():
     records = json.loads(request.data)
     video = db.video.find_one({ "_id": ObjectId(records['video_id'])})
     cctv = db.cctv.find_one({ "_id": ObjectId(video['location_id']) })
-    for single_record in records['unique_person']:
-        #not really sure abt the parameters
-        single_record.update({'coord': {"latitude": cctv['latitude'], "longitude": cctv['longitude']}, 'location_type': cctv['location_type'], "street": cctv['street'], "city": cctv['city'], "county": cctv['county'], "country": cctv['country'], "state": cctv['state'], "sublocality": cctv['sublocality']})
+    print(records['unique_person'])
+    if records['unique_person'] != []:
+        for single_record in records['unique_person']:
+            #not really sure abt the parameters
+            single_record.update({'coord': {"latitude": cctv['latitude'], "longitude": cctv['longitude']}, 'location_type': cctv['location_type'], "street": cctv['street'], "city": cctv['city'], "county": cctv['county'], "country": cctv['country'], "state": cctv['state'], "sublocality": cctv['sublocality']})
 
-    #saving unique_persons into db
-    db.unique_person.insert_many(records['unique_person'])
-    db.video.update({ "_id": ObjectId(records['video_id']) }, { "$set": { "processed" : True }})
+        #saving unique_persons into db
+        db.unique_person.insert_many(records['unique_person'])
+        db.video.update({ "_id": ObjectId(records['video_id']) }, { "$set": { "processed" : True }})
 
     return jsonify({"success": True, "message": "Video is processed!"}), 200
+
+
 
 
 # @process.route('/FindUnique', methods=['POST'])

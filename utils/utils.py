@@ -6,11 +6,13 @@ import random
 import string
 from bson import ObjectId
 from werkzeug.wsgi import ClosingIterator
+from utils.connect import db, fs
+import os
 from traceback import print_exc
 import numpy as np
 
 ALLOWED_EXTENSIONS = ['mp4','avi','jpeg','png']
-frame_rate = 0.5
+frame_rate = 1
 
 class AfterResponse:
     def __init__(self, application=None):
@@ -111,9 +113,8 @@ def processor(oid,file_id,timestamp):
         vidcap = cv2.VideoCapture(video_name)
         sec = 0
 
-        frame_rate = 0.5                                                         # it will capture image in each 0.5 second
-        total_frames = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)//(frame_rate*vidcap.get(cv2.CAP_PROP_FPS)) + 1
-
+        total_frames = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)//(frame_rate*vidcap.get(cv2.CAP_PROP_FPS))
+        print(total_frames)
         success = getFrame(vidcap,oid,sec,timestamp,total_frames)
         while success:
             sec = sec + frame_rate
