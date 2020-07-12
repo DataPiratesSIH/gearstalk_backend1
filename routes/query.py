@@ -19,7 +19,7 @@ nltk.download('wordnet')
 query = Blueprint('query', __name__)
 lemmatizer = WordNetLemmatizer()
 all_colors = [color[3] for color in colours]                                #importing list of available colors
-
+rgb2hex = lambda r,g,b: f"#{r:02x}{g:02x}{b:02x}"
 
 
 
@@ -38,7 +38,8 @@ def nlp_text(text):
     for token in tokens:
         lemmatizer.lemmatize(token)
         if token in all_colors:
-            color_values.append(token)
+            r,b,g,cl = colours[all_colors.index(token)]
+            color_values.append(rgb2hex(r,g,b))
         elif token in stopwords:
             features.append(token)
     return features,list(set(color_values)),dates
