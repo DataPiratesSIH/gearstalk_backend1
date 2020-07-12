@@ -77,7 +77,7 @@ def search():
 
 
 #returns the list of unique_persons with the best match
-@query.route('/text_search', methods=['GET'])
+@query.route('/text_search', methods=['POST'])
 # @jwt_required
 def text_search():
     try:

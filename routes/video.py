@@ -52,7 +52,7 @@ def makeCharts(oid):
     # oid = "5ef4dc433f16cd00b13a67e8"
     if oid == None or len(oid) != 24:
         return jsonify({"success": False, "message": "No Object Id in param."}), 400
-    feature = db.features.find_one({"_id": ObjectId(oid)})
+    feature = db.features.find_one({ "video_id": oid})
     frame_sec_array = []
     labels_array = []
     line_chart = []
@@ -201,13 +201,13 @@ def filterByType(typeVal, videos):
     elif typeVal == typeOf[1]:
         items = []
         for v in videos:
-            if v['processed'] == True:
+            if v['prepared'] == True:
                 items.append(v)
         return items
     elif typeVal == typeOf[1]:
         items = []
         for v in videos:
-            if v['processed'] == False:
+            if v['prepared'] == False:
                 items.append(v)
         return items
     else:
