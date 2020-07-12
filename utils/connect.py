@@ -7,11 +7,11 @@ import googlemaps
 load_dotenv()
 CONNECTION_STRING = os.getenv("MONGODB_STRING_CLOUD")
 GOOGLEMAPS_KEY = os.getenv("GOOGLE_MAPS_KEY")
-LOAD_BALANCER_URL = os.getenv("HAPROXY_URL")
+RABBITMQ_URL = os.getenv("RABBITMQ_URL")
 
 client = pymongo.MongoClient(CONNECTION_STRING)
 db = client.get_database('gearstalk')
 fs = GridFSBucket(db)
 gmaps = googlemaps.Client(key=GOOGLEMAPS_KEY)
 
-stopwords = ['Blazer','Burkha','Chudidar','Long-pants','Saree','Bags','Kurta','Skirt','Strip-dress','Sunglasses','Trousers','shirt']
+stopwords =  ['Blazer', 'Burkha', 'Headwear', 'Long pants', 'Scarf', 'Sweater', 'Vest', 'bags', 'chudidar', 'hoddie', 'jeans', 'jersey', 'kurta', 'saree', 'shirt', 'shoes', 'skirt', 'strip-dress', 'sunglasses', 'tops', 'trousers', 'tshirt']

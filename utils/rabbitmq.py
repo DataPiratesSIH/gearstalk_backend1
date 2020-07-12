@@ -1,6 +1,6 @@
 import pika
 import json
-from utils.connect import LOAD_BALANCER_URL
+from utils.connect import RABBITMQ_URL
 
 
 
@@ -13,7 +13,7 @@ def rabbitmq_bridge(data):
 
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(host='localhost',
-                                    credentials=credentials))                       #load_balancer url/ip in (host)
+                                    credentials=credentials))                       #RABBITMQ url/ip in (host)
     channel = connection.channel()
 
     channel.queue_declare(queue='video_frame')

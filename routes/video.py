@@ -348,7 +348,8 @@ def addVideo():
         "file_id": str(oid),
         "thumbnail_id": str(thumbnail_oid),
         "duration": duration,
-        "processed": False
+        "processing": False,
+        "prepared": False
     })
 
     if os.path.exists(video_name):
