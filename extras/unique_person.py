@@ -7,11 +7,12 @@ import json
 import itertools
 from flask import request
 import time
+import numpy as np
 import ast
 
-# client = MongoClient("mongodb+srv://admin:admin@cluster0-jnsfh.mongodb.net/test?retryWrites=true&w=majority")
+client = MongoClient("mongodb+srv://admin:admin@cluster0-jnsfh.mongodb.net/test?retryWrites=true&w=majority")
 
-# db = client.get_database('gearstalk')
+db = client.get_database('gearstalk')
 # video_sample = "959424"
 # frame_sec_array = []
 # labels_array = []
@@ -65,16 +66,16 @@ import ast
 # end = time.time()
 
 
-arr = [{'last_seen': 0, 'labels': ['jeans', 'Scarf'], 'colors': ['darkslategray', 'darkslategray']}, {'last_seen': 2, 'labels': ['Sweater', 'Scarf'], 'colors': ['darkslategray', 'darkslategray']}, {'last_seen': 2, 'labels': ['Blazer'], 'colors': ['darkslategray']}, {'last_seen': 2, 'labels': ['Sweater'], 'colors': ['darkslategray']}, {'last_seen': 4, 'labels': ['Sweater', 'skirt'], 'colors': ['rosybrown', 'darkslategray']}, {'last_seen': 4, 'labels': ['Blazer', 'Scarf'], 'colors': ['darkslategray','darkslategray']}, {'last_seen': 6, 'labels': ['Sweater'], 'colors': ['darkslategray']}, {'last_seen': 6, 'labels': ['Sweater'], 'colors': ['darkslategray']}, {'last_seen': 6, 'labels': ['jeans'], 'colors': ['darkslategray']}, {'last_seen': 10, 'labels': ['Sweater'], 'colors': ['darkslategray']}, {'last_seen': 12, 'labels': ['Sweater', 'skirt'], 'colors': ['darkslategray', 'darkslateblue']}, {'last_seen': 18, 'labels': ['Long pants'], 'colors': ['rosybrown']}, {'last_seen': 20, 'labels': ['Sweater', 'jeans'], 'colors': ['silver', 'dimgray']}, {'last_seen': 20, 'labels': ['Sweater', 'jeans'], 'colors': ['silver', 'dimgray']}, {'last_seen': 20, 'labels': ['jersey', 'jeans', 'Scarf'], 'colors': ['dimgray', 'gray', 'silver']}, {'last_seen': 22, 'labels': ['shirt', 'jeans'], 'colors': ['darkgray', 'dimgray']}, {'last_seen': 22, 'labels': ['Blazer'], 'colors': ['saddlebrown']}]
+# arr = [{'last_seen': 0, 'labels': ['jeans', 'Scarf'], 'colors': ['darkslategray', 'darkslategray']}, {'last_seen': 2, 'labels': ['Sweater', 'Scarf'], 'colors': ['darkslategray', 'darkslategray']}, {'last_seen': 2, 'labels': ['Blazer'], 'colors': ['darkslategray']}, {'last_seen': 2, 'labels': ['Sweater'], 'colors': ['darkslategray']}, {'last_seen': 4, 'labels': ['Sweater', 'skirt'], 'colors': ['rosybrown', 'darkslategray']}, {'last_seen': 4, 'labels': ['Blazer', 'Scarf'], 'colors': ['darkslategray','darkslategray']}, {'last_seen': 6, 'labels': ['Sweater'], 'colors': ['darkslategray']}, {'last_seen': 6, 'labels': ['Sweater'], 'colors': ['darkslategray']}, {'last_seen': 6, 'labels': ['jeans'], 'colors': ['darkslategray']}, {'last_seen': 10, 'labels': ['Sweater'], 'colors': ['darkslategray']}, {'last_seen': 12, 'labels': ['Sweater', 'skirt'], 'colors': ['darkslategray', 'darkslateblue']}, {'last_seen': 18, 'labels': ['Long pants'], 'colors': ['rosybrown']}, {'last_seen': 20, 'labels': ['Sweater', 'jeans'], 'colors': ['silver', 'dimgray']}, {'last_seen': 20, 'labels': ['Sweater', 'jeans'], 'colors': ['silver', 'dimgray']}, {'last_seen': 20, 'labels': ['jersey', 'jeans', 'Scarf'], 'colors': ['dimgray', 'gray', 'silver']}, {'last_seen': 22, 'labels': ['shirt', 'jeans'], 'colors': ['darkgray', 'dimgray']}, {'last_seen': 22, 'labels': ['Blazer'], 'colors': ['saddlebrown']}]
 
-start = time.time()
-for i in arr:
-    # multiassign(i['timestamp', 'location'], [time.time(), {"lat":352,"lng":7658}])
-    i.update({'timestamp':time.time(),'location': {"lat":352,"lng":7658}})
-    # i['timestamp'] = time.time()
-    # i['location'] = {"lat":352,"lng":7658}
-print(arr)
-print(time.time()-start)
+# start = time.time()
+# for i in arr:
+#     # multiassign(i['timestamp', 'location'], [time.time(), {"lat":352,"lng":7658}])
+#     i.update({'timestamp':time.time(),'location': {"lat":352,"lng":7658}})
+#     # i['timestamp'] = time.time()
+#     # i['location'] = {"lat":352,"lng":7658}
+# print(arr)
+# print(time.time()-start)
 
 
 # print(start2-start,end - start2) 
@@ -124,3 +125,26 @@ print(time.time()-start)
 #             # print(x) 
 #             big_data.append(x)
 #         print(big_data)
+
+
+
+
+import collections
+import pandas as pd
+
+
+start = time.time()
+data = db.unique_person.find({"video_id":"5f05d0f814e6a15bdc797d12"},{"labels":1, "colors":1,"_id":0})
+
+# df = pd.DataFrame(data)
+# new_data = df.labels
+
+
+# data = np.array(data)
+# new_data = data[:]['labels']+data[:]['colors']
+# new_data = list(map(lambda t: map(lambda x: t['labels']+t['colors'] in t) in data))
+new_data = [ [x+','+y for x,y in zip(t['labels'],t['colors'])] for t in data]
+x = [_ for i in range(len(new_data)) for _ in new_data[i]]
+cc = collections.Counter(x)
+y = [ {"from": key.split(",")[0], "to": key.split(",")[1], "value": cc[key]} for key in cc]
+print(y,time.time()-start)

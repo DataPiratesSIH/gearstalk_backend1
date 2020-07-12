@@ -40,8 +40,8 @@ def nlp_text(text):
         if token in all_colors:
             color_values.append(token)
         elif token in stopwords:
-            features.append(token) 
-    return features,list(set(color_values)),dates[0]
+            features.append(token)
+    return features,list(set(color_values)),dates
 
 
 
@@ -75,6 +75,7 @@ def search():
 
 
 
+
 #returns the list of unique_persons with the best match
 @query.route('/text_search', methods=['GET'])
 # @jwt_required
@@ -83,15 +84,33 @@ def text_search():
         data = request.get_json()
         text = data['text'].lower()
         labels,colors,date = nlp_text(text)
-        if len(labels) == 0 and len(colors) == 0:
-            return jsonify({"status": False, "message": "Provide Labels or colors in the text!!", "person": []}), 200
-        elif "features" not in db.list_collection_names():
-            return jsonify({"success": False, "message": "Video is not yet processed!!"}), 404
-        else:
-            best_match = list(db.unique_person.find({"labels": { "$in": labels }, "colors": { "$in": colors}}).limit(8))
-            return jsonify({"status": True, "message": "Top 8 best_matches!!", "person": dumps(best_match)}), 200
+        return jsonify({"status": True, "labels": labels, "colors": colors, "date": date}), 200
     except Exception as e:
         return f"An Error Occured: {e}"
+
+
+
+
+
+#returns the list of unique_persons with the best match
+# @query.route('/text_search', methods=['GET'])
+# # @jwt_required
+# def text_search():
+#     try:
+#         data = request.get_json()
+#         text = data['text'].lower()
+#         labels,colors=[],[]
+#         labels,colors,date = nlp_text(text)
+#         if len(labels) == 0 and len(colors) == 0:
+#             return jsonify({"status": False, "message": "Provide Labels or colors in the text!!", "person": []}), 200
+#         elif "features" not in db.list_collection_names():
+#             return jsonify({"success": False, "message": "Video is not yet processed!!"}), 404
+#         else:
+#             print(labels,colors,date)
+#             best_match = list(db.unique_person.find({"labels": { "$in": {} }, "colors": { "$in": {}}}).limit(8))
+#             return jsonify({"status": True, "message": "Top 8 best_matches!!", "person": dumps(best_match)}), 200
+#     except Exception as e:
+#         return f"An Error Occured: {e}"
 
 
 

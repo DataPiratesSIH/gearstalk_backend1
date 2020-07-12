@@ -26,6 +26,26 @@ typeOf = ['None', 'Processed', 'Unprocessed']
             visualization
 -----------------------------------'''
 
+@video.route('/toggle_chart/<oid>', methods=['GET'])
+def toggle_chart(oid):
+    try:
+        if oid == None or len(oid) != 24:
+            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+        elif "unique_person" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection features."}), 404
+        else:
+            data = db.unique_person.find({"video_id": oid},{"labels":1, "colors":1,"_id":0})
+            new_data = [ [x+','+y for x,y in zip(t['labels'],t['colors'])] for t in data]
+            meta = [_ for i in range(len(new_data)) for _ in new_data[i]]
+            cc = Counter(meta)
+            features = [ {"from": key.split(",")[0], "to": key.split(",")[1], "value": cc[key]} for key in cc]
+            return jsonify({"status": True, "message": "Toggle Chord Chart!!", "metadata": dumps(features)}), 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
+
+
+
 # method to get data from the database to the javascript of the line graph.
 @video.route('/visual/<oid>', methods=['GET'])
 def makeCharts(oid):
