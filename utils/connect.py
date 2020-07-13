@@ -14,4 +14,4 @@ db = client.get_database('gearstalk')
 fs = GridFSBucket(db)
 gmaps = googlemaps.Client(key=GOOGLEMAPS_KEY)
 
-stopwords =  ['Blazer', 'Burkha', 'Headwear', 'Long pants', 'Scarf', 'Sweater', 'Vest', 'bags', 'chudidar', 'hoddie', 'jeans', 'jersey', 'kurta', 'saree', 'shirt', 'shoes', 'skirt', 'strip-dress', 'sunglasses', 'tops', 'trousers', 'tshirt']
+stopwords =  ['blazer', 'burkha', 'headwear', 'long pants', 'scarf', 'sweater', 'vest', 'bag', 'chudidar', 'hoodie', 'jeans', 'jersey', 'kurta', 'saree', 'shirt', 'shoes', 'skirt', 'strip-dress', 'sunglasses', 'tops', 'trousers', 'tshirt']

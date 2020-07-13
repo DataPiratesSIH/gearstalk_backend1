@@ -18,15 +18,14 @@ nltk.download('wordnet')
 
 query = Blueprint('query', __name__)
 lemmatizer = WordNetLemmatizer()
-all_colors = [color[3] for color in colours]                                #importing list of available colors
-rgb2hex = lambda r,g,b: f"#{r:02x}{g:02x}{b:02x}"
-
+# importing list of available colors
+all_colors = [color[3] for color in colours]
+def rgb2hex(r, g, b): return f"#{r:02x}{g:02x}{b:02x}"
 
 
 '''-----------------------------------
             query functions
 -----------------------------------'''
-
 
 def nlp_text(text):
     tokens = word_tokenize(text)
@@ -38,15 +37,12 @@ def nlp_text(text):
     for token in tokens:
         lemmatizer.lemmatize(token)
         if token in all_colors:
-            r,b,g,cl = colours[all_colors.index(token)]
-            color_values.append(rgb2hex(r,g,b))
+            r, g, b, a = colours[all_colors.index(token)]
+            color_values.append({"hex": rgb2hex(r, g, b), "rgb": {
+                                "r": r, "g": g, "b": b, "a": 1}})
         elif token in stopwords:
             features.append(token)
-    return features,list(set(color_values)),dates
-
-
-
-
+    return list(set(features)), color_values, dates
 
 
 '''-----------------------------------
@@ -54,46 +50,57 @@ def nlp_text(text):
 -----------------------------------'''
 
 
-#returns the list of unique_persons with the best match
-@query.route('/search', methods=['GET'])
+# returns the list of unique_persons with the best match
+@query.route('/search', methods=['POST'])
 # @jwt_required
 def search():
     try:
         data = request.get_json()
-        labels = [ x.lower() for x in data['labels']]
-        colors = [ x.lower() for x in data['colors']]
-        if len(labels) == 0 and len(colors) == 0:
-            return jsonify({"status": False, "message": "Provide Labels or colors in the text!!", "person": []}), 200
-        elif "features" not in db.list_collection_names():
-            return jsonify({"success": False, "message": "Video is not yet processed!!"}), 404
-        else:
-            best_match = list(db.unique_person.find({"labels": { "$in": labels }, "colors": { "$in": colors}}).limit(8))
-            print(best_match)
-            return jsonify({"status": True, "message": "Top 8 best_matches!!", "person": dumps(best_match)}), 200
+        attributes = data['attributes']
+        video = data['video_id']
+        new_attributes = []
+        for a in attributes:
+            print("person")
+            person = {}
+            person["id"] = a['id']
+            person["labels"] = a['labels']
+            print(a['labels'])
+            colors = []
+            for c in a['colors']:
+                print(c['rgb'])
+            person["colors"] = colors
+            new_attributes.append(person)
+
+        return jsonify({ "success": True, "message": "ok"}),200
+        # labels = [x.lower() for x in data['labels']]
+        # colors = [x.lower() for x in data['colors']]
+        # if len(labels) == 0 and len(colors) == 0:
+        #     return jsonify({"status": False, "message": "Provide Labels or colors in the text!!", "person": []}), 200
+        # elif "features" not in db.list_collection_names():
+        #     return jsonify({"success": False, "message": "Video is not yet processed!!"}), 404
+        # else:
+        #     best_match = list(db.unique_person.find(
+        #         {"labels": {"$in": labels}, "colors": {"$in": colors}}).limit(8))
+        #     print(best_match)
+        #     return jsonify({"status": True, "message": "Top 8 best_matches!!", "person": dumps(best_match)}), 200
     except Exception as e:
         return f"An Error Occured: {e}"
 
 
-
-
-
-#returns the list of unique_persons with the best match
+# returns the list of unique_persons with the best match
 @query.route('/text_search', methods=['POST'])
 # @jwt_required
 def text_search():
     try:
         data = request.get_json()
         text = data['text'].lower()
-        labels,colors,date = nlp_text(text)
-        return jsonify({"status": True, "labels": labels, "colors": colors, "date": date}), 200
+        labels, colors, date = nlp_text(text)
+        return jsonify({"success": True, "labels": labels, "colors": colors, "date": date}), 200
     except Exception as e:
-        return f"An Error Occured: {e}"
+        return f"An Error Occured: {e}", 404
 
 
-
-
-
-#returns the list of unique_persons with the best match
+# returns the list of unique_persons with the best match
 # @query.route('/text_search', methods=['GET'])
 # # @jwt_required
 # def text_search():
@@ -114,9 +121,7 @@ def text_search():
 #         return f"An Error Occured: {e}"
 
 
-
-
-#returns metadata of the whole video 
+# returns metadata of the whole video
 @query.route('/metadata/<oid>', methods=['GET'])
 # @jwt_required
 def video_metadata(oid):
@@ -127,15 +132,13 @@ def video_metadata(oid):
         elif "features" not in db.list_collection_names():
             return jsonify({"success": False, "message": "No Collection features."}), 404
         else:
-            features = db.features.find_one({ "video_id": oid})
-            return jsonify({"status": True, "message": "Retriving video metadata!!", "metadata": dumps(features)}), 200
+            features = db.features.find_one({"video_id": oid})
+            return jsonify({"success": True, "message": "Retriving video metadata!!", "metadata": dumps(features)}), 200
     except Exception as e:
         return f"An Error Occured: {e}"
 
 
-
-
-#returns the list of unique_persons with the best match
+# returns the list of unique_persons with the best match
 # @query.route('/video/<oid>', methods=['GET'])
 # # @jwt_required
 # def video_search_person(oid):
