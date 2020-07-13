@@ -64,15 +64,18 @@ def search():
         new_attributes = []
         for a in data['attributes']:
             labels = [x.lower() for x in a['labels']]
-            colors = [nearest_colour( colours, tuple(c['r'],c['g'],c['b']) ) for c in a['colors']]
+            print(labels)
+            colors = [nearest_colour( colours, tuple([c['rgb']['r'],c['rgb']['g'],c['rgb']['b']]) ) for c in a['colors']]
+
             if len(labels) == 0 and len(colors) == 0:
                 continue
             else:
                 best_match = list(db.unique_person.find({"video_id": video_id, "labels": {"$in": labels}, "colors": {"$in": colors}}).limit(2))
             new_attributes.append(best_match)
-        return jsonify({ "success": True, "message": "Top 2 best_matches for each person!!", "person": dumps(new_attributes)}}),200
+        return jsonify({ "success": True, "message": "Top 2 best_matches for each person!!", "person": dumps(new_attributes)}),200
     except Exception as e:
-        return f"An Error Occured: {e}"
+        print(e)
+        return f"An Error Occured: {e}", 404
 
 
 # returns the list of labels and colors extracted from a text
