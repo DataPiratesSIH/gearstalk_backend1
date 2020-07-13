@@ -64,14 +64,14 @@ def search():
         new_attributes = []
         for a in data['attributes']:
             labels = [x.lower() for x in a['labels']]
-            print(labels)
-            colors = [nearest_colour( colours, tuple([c['rgb']['r'],c['rgb']['g'],c['rgb']['b']]) ) for c in a['colors']]
-
+            colors = [nearest_colour( colours, tuple([c['rgb']['r'],c['rgb']['g'],c['rgb']['b']]) )[3] for c in a['colors']]
+            print(labels,colors)
             if len(labels) == 0 and len(colors) == 0:
                 continue
             else:
-                best_match = list(db.unique_person.find({"video_id": video_id, "labels": {"$in": labels}, "colors": {"$in": colors}}).limit(2))
+                best_match = list(db.unique_person.find({"video_id": video_id, "labels": {"$in": labels}, "colors": {"$in": colors}},{"_id":0, "video_id":0 }).limit(2))
             new_attributes.append(best_match)
+        print(new_attributes)
         return jsonify({ "success": True, "message": "Top 2 best_matches for each person!!", "person": dumps(new_attributes)}),200
     except Exception as e:
         print(e)
