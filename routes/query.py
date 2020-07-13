@@ -96,7 +96,7 @@ def text_search():
 @query.route('/metadata/<oid>', methods=['GET'])
 # @jwt_required
 def video_metadata(oid):
-    try:
+    # try:
         print(oid)
         if oid == None or len(oid) != 24:
             return jsonify({"success": False, "message": "No Object Id in param."}), 400
@@ -104,9 +104,13 @@ def video_metadata(oid):
             return jsonify({"success": False, "message": "No Collection features."}), 404
         else:
             features = db.features.find_one({"video_id": oid})
-            return jsonify({"success": True, "message": "Retriving video metadata!!", "metadata": dumps(features)}), 200
-    except Exception as e:
-        return f"An Error Occured: {e}"
+            print(features)
+            for m in features['metadata']:
+                for p in m['persons']:
+                    print(p['box'])
+            return dumps(features), 200
+    # except Exception as e:
+    #     return f"An Error Occured: {e}"
 
 
 # returns the list of unique_persons with the best match
