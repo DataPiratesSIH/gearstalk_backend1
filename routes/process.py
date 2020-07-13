@@ -10,6 +10,9 @@ from utils.connect import db, fs
 from utils.utils import getFrame, randomString, processor
 from flask_executor import Executor
 from datetime import datetime
+import utils.classification as cf
+import utils.colorize as cl
+from utils.colorlist import colours
 import json
 import collections
 import ast
@@ -59,41 +62,22 @@ def processVideo(oid):
 @process.route('/processcropped', methods=['POST'])
 # @jwt_required
 def processCroppedImages():
-    print("ok")
     uploaded_files = request.files.getlist("files")
     print(uploaded_files)
-    return jsonify({ "success": True }), 200
+    features = []
+    for file in uploaded_files:
+        image_buffer = file.read()
+        np_image = np.frombuffer(image_buffer, dtype=np.uint8)                                    # convert string data to numpy array
+        image = cv2.imdecode(np_image, flags=1)                                                   # convert numpy array to image
 
+        labels = cf.classify(image)
+        color_length = len(labels)
 
-'''------------------------------------------------
-            processing image db
---------------------------------------------------'''
+        if color_length != 0:                                                            #if no labels are identified then dont check for color
+            colors = cl.colorize(image,color_length)
+            features.append({"labels":labels,"colors":colors})    
 
-@process.route('/processimage/<oid>', methods=['GET'])
-# @jwt_required
-def processimage(oid):
-    print(oid)
-    if oid == None or len(oid) != 24:
-        return jsonify({"success": False, "message": "No Object Id in param."}), 400
-    elif "video" not in db.list_collection_names():
-        return jsonify({"success": False, "message": "No Collection video."}), 404
-    else:
-        video = db.video.find_one({ "_id": ObjectId(oid)}) 
-        if video['processed'] == True:
-            return jsonify({"success": False, "message": "Video is already processed."}), 404
-        elif video['processed'] == "processing":
-            return jsonify({"success": False, "message": "Video is currently being processed."}), 404
-        else:
-            #save timestamp info in the video collection
-            date = video['date']
-            time = video['time']
-            timestamp = json.dumps(datetime.strptime( date+time, '%Y-%m-%d%H:%M:%S'),ensure_ascii=False, indent=4, default=str)
-            file_id = video["file_id"]
-            processor(oid,file_id,timestamp)
-            executor.submit(processor)
-            db.video.update({ "_id": ObjectId(oid) }, { "$set": { "processed" : "processing" }})
-            return jsonify({"success": True, "message": "Video will be processed in a while!"}), 200
-
+    return jsonify({ "success": True, "features": features }), 200
 
 
 
