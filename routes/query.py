@@ -69,7 +69,7 @@ def search():
                 continue
             else:
                 best_match = list(db.unique_person.find({"video_id": video_id, "labels": {"$in": labels}, "colors": {"$in": colors}}).limit(2))
-            new_attributes.append(person)
+            new_attributes.append(best_match)
         return jsonify({ "success": True, "message": "Top 2 best_matches for each person!!", "person": dumps(new_attributes)}}),200
     except Exception as e:
         return f"An Error Occured: {e}"
