@@ -37,7 +37,7 @@ def nlp_text(text):
     for token in tokens:
         lemmatizer.lemmatize(token)
         if token in all_colors:
-            r, g, b, a = colours[all_colors.index(token)]
+            r, g, b, name = colours[all_colors.index(token)]
             color_values.append({"hex": rgb2hex(r, g, b), "rgb": {
                                 "r": r, "g": g, "b": b, "a": 1}})
         elif token in stopwords:
