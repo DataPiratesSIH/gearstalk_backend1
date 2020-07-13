@@ -52,6 +52,18 @@ def processVideo(oid):
             return jsonify({"success": True, "message": "Video will be processed in a while!"}), 200
 
 
+'''------------------------------------------------
+            processing cropped images
+--------------------------------------------------'''
+
+@process.route('/processcropped', methods=['POST'])
+# @jwt_required
+def processCroppedImages():
+    print("ok")
+    uploaded_files = request.files.getlist("files")
+    print(uploaded_files)
+    return jsonify({ "success": True }), 200
+
 
 '''------------------------------------------------
             processing image db
