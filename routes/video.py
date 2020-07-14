@@ -264,6 +264,29 @@ def getVideoById(oid):
 
 # Returns videos for a search query
 
+@video.route('getvideostats',methods=['GET'])
+# @jwt_required
+def getVideoStats():
+    if "video" not in db.list_collection_names():
+        return jsonify({"success": False, "message": "No Video Collection."}), 400
+    else:
+        count = db.video.find({}).count()
+        prepared = db.video.find({ "prepared": True}).count()
+        unprepared = count - prepared
+        return jsonify({ "success": True, "count":count, "prepared": prepared, "unprepared":unprepared}), 200
+
+@video.route('getrecentvideo',methods=['GET'])
+# @jwt_required
+def getRecentVideo():
+    if "video" not in db.list_collection_names():
+        return jsonify({"success": False, "message": "No Video Collection."}), 400
+    else:
+        videos = list(db.video.find({}))
+        videos.sort(key=lambda x: datetime.strptime(
+            x['date'], '%Y-%m-%d'), reverse=True)
+        if len(videos) > 4:
+            videos = videos[:4]
+        return dumps(videos), 200
 
 @video.route('/search', methods=['POST'])
 # @jwt_required
