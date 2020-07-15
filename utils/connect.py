@@ -7,7 +7,9 @@ import googlemaps
 load_dotenv()
 CONNECTION_STRING = os.getenv("MONGODB_STRING_CLOUD")
 GOOGLEMAPS_KEY = os.getenv("GOOGLE_MAPS_KEY")
-RABBITMQ_URL = os.getenv("RABBITMQ_URL")
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
+RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
 
 client = pymongo.MongoClient(CONNECTION_STRING)
 db = client.get_database('gearstalk')
