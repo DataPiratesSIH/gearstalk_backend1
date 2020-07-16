@@ -37,12 +37,16 @@ def nlp_text(text):
     for token in tokens:
         lemmatizer.lemmatize(token)
         if token in all_colors:
-            r, g, b, a = colours[all_colors.index(token)]
+            r, g, b, name = colours[all_colors.index(token)]
             color_values.append({"hex": rgb2hex(r, g, b), "rgb": {
                                 "r": r, "g": g, "b": b, "a": 1}})
         elif token in stopwords:
             features.append(token)
     return list(set(features)), color_values, dates
+
+
+def nearest_colour( subjects, query ):
+    return min( subjects, key = lambda subject: sum( (s - q) ** 2 for s, q in zip( subject, query ) ) )
 
 
 '''-----------------------------------
@@ -56,38 +60,25 @@ def nlp_text(text):
 def search():
     try:
         data = request.get_json()
-        attributes = data['attributes']
-        video = data['video_id']
+        video_id = data['video_id']
         new_attributes = []
-        for a in attributes:
-            print("person")
-            person = {}
-            person["id"] = a['id']
-            person["labels"] = a['labels']
-            print(a['labels'])
-            colors = []
-            for c in a['colors']:
-                print(c['rgb'])
-            person["colors"] = colors
-            new_attributes.append(person)
-
-        return jsonify({ "success": True, "message": "ok"}),200
-        # labels = [x.lower() for x in data['labels']]
-        # colors = [x.lower() for x in data['colors']]
-        # if len(labels) == 0 and len(colors) == 0:
-        #     return jsonify({"status": False, "message": "Provide Labels or colors in the text!!", "person": []}), 200
-        # elif "features" not in db.list_collection_names():
-        #     return jsonify({"success": False, "message": "Video is not yet processed!!"}), 404
-        # else:
-        #     best_match = list(db.unique_person.find(
-        #         {"labels": {"$in": labels}, "colors": {"$in": colors}}).limit(8))
-        #     print(best_match)
-        #     return jsonify({"status": True, "message": "Top 8 best_matches!!", "person": dumps(best_match)}), 200
+        for a in data['attributes']:
+            labels = [x.lower() for x in a['labels']]
+            colors = [nearest_colour( colours, tuple([c['rgb']['r'],c['rgb']['g'],c['rgb']['b']]) )[3] for c in a['colors']]
+            print(labels,colors)
+            if len(labels) == 0 and len(colors) == 0:
+                continue
+            else:
+                best_match = list(db.unique_person.find({"video_id": video_id, "labels": {"$in": labels}, "colors": {"$in": colors}},{"_id":0}).limit(2))
+            new_attributes.append(best_match)
+        print(new_attributes)
+        return dumps(new_attributes),200
     except Exception as e:
-        return f"An Error Occured: {e}"
+        print(e)
+        return f"An Error Occured: {e}", 404
 
 
-# returns the list of unique_persons with the best match
+# returns the list of labels and colors extracted from a text
 @query.route('/text_search', methods=['POST'])
 # @jwt_required
 def text_search():
@@ -99,26 +90,6 @@ def text_search():
     except Exception as e:
         return f"An Error Occured: {e}", 404
 
-
-# returns the list of unique_persons with the best match
-# @query.route('/text_search', methods=['GET'])
-# # @jwt_required
-# def text_search():
-#     try:
-#         data = request.get_json()
-#         text = data['text'].lower()
-#         labels,colors=[],[]
-#         labels,colors,date = nlp_text(text)
-#         if len(labels) == 0 and len(colors) == 0:
-#             return jsonify({"status": False, "message": "Provide Labels or colors in the text!!", "person": []}), 200
-#         elif "features" not in db.list_collection_names():
-#             return jsonify({"success": False, "message": "Video is not yet processed!!"}), 404
-#         else:
-#             print(labels,colors,date)
-#             best_match = list(db.unique_person.find({"labels": { "$in": {} }, "colors": { "$in": {}}}).limit(8))
-#             return jsonify({"status": True, "message": "Top 8 best_matches!!", "person": dumps(best_match)}), 200
-#     except Exception as e:
-#         return f"An Error Occured: {e}"
 
 
 # returns metadata of the whole video
@@ -133,7 +104,7 @@ def video_metadata(oid):
             return jsonify({"success": False, "message": "No Collection features."}), 404
         else:
             features = db.features.find_one({"video_id": oid})
-            return jsonify({"success": True, "message": "Retriving video metadata!!", "metadata": dumps(features)}), 200
+            return dumps(features), 200
     except Exception as e:
         return f"An Error Occured: {e}"
 

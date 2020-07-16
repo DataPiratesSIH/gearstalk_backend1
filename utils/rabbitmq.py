@@ -1,7 +1,6 @@
 import pika
 import json
-from utils.connect import RABBITMQ_URL
-
+from utils.connect import RABBITMQ_HOST,RABBITMQ_USERNAME,RABBITMQ_PASSWORD
 
 
 ''' -------------------------------------------------
@@ -9,10 +8,10 @@ from utils.connect import RABBITMQ_URL
 ----------------------------------------------------'''
 
 def rabbitmq_bridge(data):
-    credentials = pika.PlainCredentials('test', 'test')
+    credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
 
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host='localhost',
+        pika.ConnectionParameters(host=RABBITMQ_HOST,
                                     credentials=credentials))                       #RABBITMQ url/ip in (host)
     channel = connection.channel()
 
@@ -32,10 +31,10 @@ def rabbitmq_bridge(data):
 ----------------------------------------------------'''
 
 def rabbitmq_live(cam_id, lat, lng, url):
-    credentials = pika.PlainCredentials('test', 'test')
+    credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
 
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host='127.0.1.1', credentials=credentials))
+        pika.ConnectionParameters(host=RABBITMQ_HOST, credentials=credentials))
     channel = connection.channel()
 
     channel.queue_declare(queue='live_data')
