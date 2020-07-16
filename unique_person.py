@@ -129,12 +129,12 @@ db = client.get_database('gearstalk')
 
 
 
-import collections
-import pandas as pd
+# import collections
+# import pandas as pd
 
 
-start = time.time()
-data = db.unique_person.find({"video_id":"5f05d0f814e6a15bdc797d12"},{"labels":1, "colors":1,"_id":0})
+# start = time.time()
+# data = db.unique_person.find({"video_id":"5f05d0f814e6a15bdc797d12"},{"labels":1, "colors":1,"_id":0})
 
 # df = pd.DataFrame(data)
 # new_data = df.labels
@@ -143,8 +143,143 @@ data = db.unique_person.find({"video_id":"5f05d0f814e6a15bdc797d12"},{"labels":1
 # data = np.array(data)
 # new_data = data[:]['labels']+data[:]['colors']
 # new_data = list(map(lambda t: map(lambda x: t['labels']+t['colors'] in t) in data))
+# new_data = [ [x+','+y for x,y in zip(t['labels'],t['colors'])] for t in data]
+# x = [_ for i in range(len(new_data)) for _ in new_data[i]]
+# cc = collections.Counter(x)
+# y = [ {"from": key.split(",")[0], "to": key.split(",")[1], "value": cc[key]} for key in cc]
+# print(y,time.time()-start)
+
+from collections import Counter
+
+feature = db.features.find_one({ "video_id": "5f05d0f814e6a15bdc797d12"})
+# frame_sec_array = []
+# labels_array = []
+# line_chart = []
+# big_data = []
+# big_data2 = []
+# y_axis = []
+# x_axis = []
+# object_demo = feature["metadata"]
+# for object_small in object_demo:
+#         frame_sec = object_small["frame_sec"]
+#         x_axis.append(frame_sec)
+#         cnt = Counter()
+#         key_array = []
+#         value_array = []
+#         dict_array = []
+#         x = []
+#         dict_new = {}
+#         person = object_small["persons"]
+#         person1 = json.loads(person)
+#         y_axis.append(len(person1))
+#         for i in person1:
+#                 x.append(i["labels"])
+#         merged = list(itertools.chain(*x))
+
+#         for i in merged:
+#                 cnt[i] += 1
+#         new_cnt = dict(cnt)
+
+#         for key, value in new_cnt.items():
+#                 key_array.append(key)
+#                 value_array.append(value)
+
+#         for i in range(len(key_array)):
+#                 res = {"labels": key_array[i], "count": value_array[i]}
+#                 dict_new.update({key_array[i]: value_array[i]})
+#                 # print(res)
+#                 dict_array.append(res)
+#         # # print(dict_array)
+#         line_dict = {"date": frame_sec, "value": len(person1)}
+#         dict_new2 = {"frame_sec": frame_sec, "Number of People": len(
+#                 person1), "feature_label": dict_array}
+#         big_data.append(dict_new2)
+#         line_chart.append(line_dict)
+#         big_data2.append(dict_new)
+
+
+
+#line_chart
+'''
+feature = db.features.find_one({ "video_id": "5f05d0f814e6a15bdc797d12"})
+Year = []
+Unemployment_Rate = []
+line_chart = { x['frame_sec'] : len(json.loads(x['persons'])) for x in feature['metadata']}
+
+import matplotlib.pyplot as plt
+import cv2
+import io
+   
+Year = list(line_chart.keys())
+Unemployment_Rate = list(line_chart.values())
+print(Year,Unemployment_Rate)
+  
+plt.plot(Year, Unemployment_Rate)
+plt.title('Timestamp Vs No. of persons')
+plt.xlabel('No. of persons')
+plt.ylabel('Timestamp')
+plt.show()
+'''
+# buf = io.BytesIO()
+# plt.savefig(buf, format="png", dpi=180)
+# print(buf)
+# cv2.imwrite("uwt.png",buf)
+
+
+
+
+
+import time
+import matplotlib.pyplot as plt
+#heatMap
+# '''
+start = time.time()
+
+data = db.unique_person.find({"video_id": "5f05d0f814e6a15bdc797d12"},{"labels":1, "colors":1,"_id":0})
 new_data = [ [x+','+y for x,y in zip(t['labels'],t['colors'])] for t in data]
-x = [_ for i in range(len(new_data)) for _ in new_data[i]]
-cc = collections.Counter(x)
-y = [ {"from": key.split(",")[0], "to": key.split(",")[1], "value": cc[key]} for key in cc]
-print(y,time.time()-start)
+meta = [_ for i in range(len(new_data)) for _ in new_data[i]]
+cc = Counter(meta)
+colors = [ key.split(",")[1] for key in cc]
+
+# features = { {[key.split(",")[0]][key.split(",")[1]] : cc[key]} for key in cc}
+
+class AutoVivification(dict):
+    """Implementation of perl's autovivification feature."""
+    def __getitem__(self, item):
+        try:
+            return dict.__getitem__(self, item)
+        except KeyError:
+            value = self[item] = type(self)()
+            return value
+
+features=AutoVivification()
+for key in cc:
+        if key.split(",")[0] not in features.keys():
+                for x in colors:
+                        features[key.split(",")[0]][x] = 0
+        features[key.split(",")[0]][key.split(",")[1]] = cc[key]
+corr = [ list(val.values()) for val in features.values()]
+print(list(features.keys()),list(features.values())[0].keys(),corr,time.time()-start)
+
+end = time.time()
+# print(end-start)
+
+import seaborn as sns
+from io import BytesIO
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+fig = plt.figure(figsize=(12,10), dpi= 80)
+sns.heatmap(corr, xticklabels=list(list(features.values())[0].keys()), yticklabels=list(features.keys()), cmap='RdYlGn', center=0, annot=True)
+
+# print(df.corr(), df.corr().columns, df.corr().columns)
+
+# Decorations
+plt.title('Relationship between Labels and resp. Colors', fontsize=14)
+plt.xticks(fontsize=8)
+plt.yticks(fontsize=8)
+png = BytesIO()
+FigureCanvasAgg(fig).print_png(png)
+plt.close(fig)
+# print(png.getvalue())
+print(time.time()-end)
+# '''

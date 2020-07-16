@@ -3,7 +3,7 @@ import time
 import itertools
 import json
 import requests
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template, make_response
 from flask_jwt_extended import jwt_required
 from utils.connect import client, db, fs
 from utils.geocode import address_resolver
@@ -13,6 +13,7 @@ from datetime import datetime
 from bson.json_util import dumps
 from utils.utils import getFirstFrame, allowed_file, randomString
 from collections import Counter
+from flask_weasyprint import HTML, render_pdf
 
 video = Blueprint("video", __name__)
 
@@ -108,6 +109,25 @@ def makeCharts(oid):
         labels_array.append(res)
 
     return jsonify({"linechart": line_chart, "big_data": big_data, "labels_array": labels_array}), 200
+
+
+@video.route('/report/<oid>', methods=['GET'])
+def generate_report(oid):
+    try:
+        if oid == None or len(oid) != 24:
+            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+        elif "unique_person" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection features."}), 404
+        else:
+            # data = {
+            #     "name" : "gearStalk",
+            #     "nm" : "nvjf"
+            # }
+            html = render_template('Report.html')
+            return render_pdf(HTML(string=html))
+            # return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
 
 
 '''-----------------------------------

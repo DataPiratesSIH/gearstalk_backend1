@@ -69,7 +69,7 @@ def search():
             if len(labels) == 0 and len(colors) == 0:
                 continue
             else:
-                best_match = list(db.unique_person.find({"video_id": video_id, "labels": {"$in": labels}, "colors": {"$in": colors}},{"_id":0, "video_id":0 }).limit(2))
+                best_match = list(db.unique_person.find({"video_id": video_id, "labels": {"$in": labels}, "colors": {"$in": colors}},{"_id":0}).limit(2))
             new_attributes.append(best_match)
         print(new_attributes)
         return dumps(new_attributes),200

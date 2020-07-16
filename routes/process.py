@@ -10,8 +10,8 @@ from utils.connect import db, fs
 from utils.utils import getFrame, randomString, processor
 from flask_executor import Executor
 from datetime import datetime
-import utils.classification as cf
-import utils.colorize as cl
+# import utils.classification as cf
+# import utils.colorize as cl
 from utils.colorlist import colours
 import json
 import collections
