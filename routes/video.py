@@ -92,7 +92,7 @@ def makeCharts(oid):
             dict_array.append(res)
         # # print(dict_array)
         line_dict = {"date": frame_sec, "value": len(person1)}
-        dict_new2 = {"frame_sec": frame_sec, "Number of People": len(
+        dict_new2 = {"frame_sec": str(frame_sec), "Number of People": len(
             person1), "feature_label": dict_array}
         big_data.append(dict_new2)
         line_chart.append(line_dict)
