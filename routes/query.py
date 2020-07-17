@@ -62,6 +62,7 @@ def search():
     try:
         data = request.get_json()
         video_id = data['video_id']
+        print(video_id)
         new_attributes = []
         for a in data['attributes']:
             labels = [x.lower() for x in a['labels']]

@@ -121,6 +121,7 @@ def search_report(oid):
             visualization
 -----------------------------------'''
 
+
 @video.route('/toggle_chart/<oid>', methods=['GET'])
 def toggle_chart(oid):
     try:
@@ -129,16 +130,17 @@ def toggle_chart(oid):
         elif "unique_person" not in db.list_collection_names():
             return jsonify({"success": False, "message": "No Collection features."}), 404
         else:
-            data = db.unique_person.find({"video_id": oid},{"labels":1, "colors":1,"_id":0})
-            new_data = [ [x+','+y for x,y in zip(t['labels'],t['colors'])] for t in data]
+            data = db.unique_person.find(
+                {"video_id": oid}, {"labels": 1, "colors": 1, "_id": 0})
+            new_data = [
+                [x+','+y for x, y in zip(t['labels'], t['colors'])] for t in data]
             meta = [_ for i in range(len(new_data)) for _ in new_data[i]]
             cc = Counter(meta)
-            features = [ {"from": key.split(",")[0], "to": key.split(",")[1], "value": cc[key]} for key in cc]
+            features = [{"from": key.split(",")[0], "to": key.split(",")[
+                1], "value": cc[key]} for key in cc]
             return jsonify({"status": True, "message": "Toggle Chord Chart!!", "metadata": dumps(features)}), 200
     except Exception as e:
         return f"An Error Occured: {e}"
-
-
 
 
 # method to get data from the database to the javascript of the line graph.
@@ -147,7 +149,7 @@ def makeCharts(oid):
     # oid = "5ef4dc433f16cd00b13a67e8"
     if oid == None or len(oid) != 24:
         return jsonify({"success": False, "message": "No Object Id in param."}), 400
-    feature = db.features.find_one({ "video_id": oid})
+    feature = db.features.find_one({"video_id": oid})
     frame_sec_array = []
     labels_array = []
     line_chart = []
@@ -187,7 +189,7 @@ def makeCharts(oid):
             dict_array.append(res)
         # # print(dict_array)
         line_dict = {"date": frame_sec, "value": len(person1)}
-        dict_new2 = {"frame_sec": frame_sec, "Number of People": len(
+        dict_new2 = {"frame_sec": str(frame_sec), "Number of People": len(
             person1), "feature_label": dict_array}
         big_data.append(dict_new2)
         line_chart.append(line_dict)
@@ -342,9 +344,23 @@ def getVideo():
         videos = list(db.video.find({}))
         return dumps(videos), 200
 
+# Get Video by cctv id
+
+
+@video.route('/getvideobycctv/<oid>', methods=['GET'])
+# @jwt_required
+def getVideoByCCTV(oid):
+    if oid == None:
+        return jsonify({"success": False, "message": "No Object Id in param."}), 400
+    else:
+        if "video" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection video."}), 404
+        else:
+            video = db.video.find({"location_id": oid, "prepared": True})
+            return dumps(video), 200
+
+
 # Get Video by id
-
-
 @video.route('/getvideobyid/<oid>', methods=['GET'])
 # @jwt_required
 def getVideoById(oid):
@@ -359,18 +375,20 @@ def getVideoById(oid):
 
 # Returns videos for a search query
 
-@video.route('getvideostats',methods=['GET'])
+
+@video.route('getvideostats', methods=['GET'])
 # @jwt_required
 def getVideoStats():
     if "video" not in db.list_collection_names():
         return jsonify({"success": False, "message": "No Video Collection."}), 400
     else:
         count = db.video.find({}).count()
-        prepared = db.video.find({ "prepared": True}).count()
+        prepared = db.video.find({"prepared": True}).count()
         unprepared = count - prepared
-        return jsonify({ "success": True, "count":count, "prepared": prepared, "unprepared":unprepared}), 200
+        return jsonify({"success": True, "count": count, "prepared": prepared, "unprepared": unprepared}), 200
 
-@video.route('getrecentvideo',methods=['GET'])
+
+@video.route('getrecentvideo', methods=['GET'])
 # @jwt_required
 def getRecentVideo():
     if "video" not in db.list_collection_names():
@@ -382,6 +400,7 @@ def getRecentVideo():
         if len(videos) > 4:
             videos = videos[:4]
         return dumps(videos), 200
+
 
 @video.route('/search', methods=['POST'])
 # @jwt_required
@@ -555,8 +574,6 @@ def updateVideoLocation():
         return dumps(video), 200
 
 # Update Video Timestamp
-
-
 @video.route('/updatevideotimestamp', methods=['PATCH'])
 # @jwt_required
 def updateVideoTimestamp():
@@ -595,8 +612,6 @@ def updateVideoTimestamp():
         return dumps(video), 200
 
 # Delete Video by id
-
-
 @video.route('/deletevideo/<oid>', methods=['DELETE'])
 # @jwt_required
 def deleteVideo(oid):
