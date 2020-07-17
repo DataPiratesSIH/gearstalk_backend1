@@ -13,7 +13,7 @@ from datetime import datetime
 from bson.json_util import dumps
 from utils.utils import getFirstFrame, allowed_file, randomString
 from collections import Counter
-from flask_weasyprint import HTML, render_pdf
+# from flask_weasyprint import HTML, render_pdf
 
 video = Blueprint("video", __name__)
 
