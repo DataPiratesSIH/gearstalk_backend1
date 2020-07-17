@@ -1,6 +1,5 @@
 import os
 import time
-import itertools
 import json
 import requests
 from flask import Blueprint, request, jsonify, render_template, make_response
@@ -13,7 +12,8 @@ from datetime import datetime
 from bson.json_util import dumps
 from utils.utils import getFirstFrame, allowed_file, randomString
 from collections import Counter
-from flask_weasyprint import HTML, render_pdf
+from itertools import chain
+import matplotlib.pyplot as plt
 
 video = Blueprint("video", __name__)
 
@@ -22,6 +22,100 @@ duration = ['None', 'Short (<4 minutes)',
             'Medium (>4 minutes and <20 minutes)', 'Long (>20 minutes)']
 sort = ['Relevance', 'Upload Date', 'Duration']
 typeOf = ['None', 'Processed', 'Unprocessed']
+
+
+
+'''-----------------------------------
+            report generation
+-----------------------------------'''
+
+
+"""Implementation of perl's autovivification feature.(Wrapper-Function)"""
+class AutoVivification(dict):
+    def __getitem__(self, item):
+        try:
+            return dict.__getitem__(self, item)
+        except KeyError:
+            value = self[item] = type(self)()
+            return value
+
+
+@video.route('/video_report/<oid>', methods=['GET'])
+def generate_report(oid):
+    try:
+        if oid == None or len(oid) != 24:
+            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+        elif "unique_person" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection features."}), 404
+        else:
+            #query db
+            feature = db.features.find_one({ "video_id": oid})
+            data = db.unique_person.find({"video_id": oid},{"labels":1, "colors":1,"_id":0})
+
+
+            #line chart
+            line_chart = { x['frame_sec'] : len(json.loads(x['persons'])) for x in feature['metadata']}
+            #plotting
+            plt.plot(list(line_chart.keys()), list(line_chart.values()))
+            plt.title('TimeFrame Vs No. of persons')
+            plt.xlabel('No. of persons')
+            plt.ylabel('TimeFrame')
+            # plt.show()
+
+
+            #heat Map
+            new_data = [ [x+','+y for x,y in zip(t['labels'],t['colors'])] for t in data]
+            meta = [_ for i in range(len(new_data)) for _ in new_data[i]]
+            cc = Counter(meta)
+            colors = [ key.split(",")[1] for key in cc]
+            features=AutoVivification()
+            for key in cc:
+                if key.split(",")[0] not in features.keys():
+                        for x in colors:
+                                features[key.split(",")[0]][x] = 0
+                features[key.split(",")[0]][key.split(",")[1]] = cc[key]
+            corr = [ list(val.values()) for val in features.values()]
+            #plotting
+            fig = plt.figure(figsize=(12,10), dpi= 80,facecolor=(1, 1, 1))
+            sns.heatmap(corr, xticklabels=list(list(features.values())[0].keys()), yticklabels=list(features.keys()), cmap='RdYlGn', center=0, annot=True)
+            plt.title('Relationship between Labels and resp. Colors', fontsize=14)
+            plt.xticks(fontsize=8)
+            plt.yticks(fontsize=8)
+            # plt.show()
+
+
+            #pie chart
+            pie_chart = collections.Counter(list(chain(*[ list(chain(*[ x['labels'] for x in json.loads(metadata['persons'])])) for metadata in feature['metadata']])))
+            #plotting
+            fig = plt.figure()
+            ax = fig.add_axes([0,0,1,1])
+            ax.axis('equal')
+            ax.pie(list(pie_chart.values()), labels = list(pie_chart.keys()),autopct='%1.2f%%')
+            # plt.show()
+            
+            # return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
+
+
+@video.route('/search_report/<oid>', methods=['GET'])
+def search_report(oid):
+    try:
+        if oid == None or len(oid) != 24:
+            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+        elif "unique_person" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection features."}), 404
+        else:
+            line_chart = { x['frame_sec'] : len(json.loads(x['persons'])) for x in feature['metadata']}
+
+            html = render_template('Report.html')
+            return render_pdf(HTML(string=html))
+            # return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
+
 
 '''-----------------------------------
             visualization
@@ -76,7 +170,7 @@ def makeCharts(oid):
         y_axis.append(len(person1))
         for i in person1:
             x.append(i["labels"])
-        merged = list(itertools.chain(*x))
+        merged = list(chain(*x))
 
         for i in merged:
             cnt[i] += 1
@@ -109,25 +203,6 @@ def makeCharts(oid):
         labels_array.append(res)
 
     return jsonify({"linechart": line_chart, "big_data": big_data, "labels_array": labels_array}), 200
-
-
-@video.route('/report/<oid>', methods=['GET'])
-def generate_report(oid):
-    try:
-        if oid == None or len(oid) != 24:
-            return jsonify({"success": False, "message": "No Object Id in param."}), 400
-        elif "unique_person" not in db.list_collection_names():
-            return jsonify({"success": False, "message": "No Collection features."}), 404
-        else:
-            # data = {
-            #     "name" : "gearStalk",
-            #     "nm" : "nvjf"
-            # }
-            html = render_template('Report.html')
-            return render_pdf(HTML(string=html))
-            # return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
-    except Exception as e:
-        return f"An Error Occured: {e}"
 
 
 '''-----------------------------------

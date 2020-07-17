@@ -11,6 +11,7 @@ from nltk.stem import WordNetLemmatizer
 from sklearn.metrics.pairwise import cosine_similarity
 from utils.colorlist import colours
 import datefinder
+import itertools
 import numpy as np
 
 nltk.download('punkt')
@@ -69,10 +70,13 @@ def search():
             if len(labels) == 0 and len(colors) == 0:
                 continue
             else:
-                best_match = list(db.unique_person.find({"video_id": video_id, "labels": {"$in": labels}, "colors": {"$in": colors}},{"_id":0}).limit(2))
-            new_attributes.append(best_match)
-        print(new_attributes)
-        return dumps(new_attributes),200
+                best_match = []
+                for ids in video_id:
+                    ids_match = list(db.unique_person.find({"video_id": ids, "labels": {"$in": labels}, "colors": {"$in": colors}},{"_id":0}).limit(2))
+                    best_match.append(ids_match)
+                new_attributes.append(best_match)
+        print(itertools.chain(*new_attributes))
+        return dumps(itertools.chain(*new_attributes)),200
     except Exception as e:
         print(e)
         return f"An Error Occured: {e}", 404

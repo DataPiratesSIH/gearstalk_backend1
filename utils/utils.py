@@ -113,7 +113,7 @@ def processor(oid,file_id,timestamp):
         vidcap = cv2.VideoCapture(video_name)
         sec = 0
 
-        total_frames = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)//(frame_rate*vidcap.get(cv2.CAP_PROP_FPS))
+        total_frames = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)//(frame_rate*vidcap.get(cv2.CAP_PROP_FPS)) + 1
         print(total_frames)
         success = getFrame(vidcap,oid,sec,timestamp,total_frames)
         while success:
