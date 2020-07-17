@@ -61,6 +61,7 @@ def search():
     try:
         data = request.get_json()
         video_id = data['video_id']
+        print(video_id)
         new_attributes = []
         for a in data['attributes']:
             labels = [x.lower() for x in a['labels']]
@@ -69,7 +70,7 @@ def search():
             if len(labels) == 0 and len(colors) == 0:
                 continue
             else:
-                best_match = list(db.unique_person.find({"video_id": video_id, "labels": {"$in": labels}, "colors": {"$in": colors}},{"_id":0}).limit(2))
+                best_match = list(db.unique_person.find({"video_id": video_id[0], "labels": {"$in": labels}, "colors": {"$in": colors}},{"_id":0}).limit(2))
             new_attributes.append(best_match)
         print(new_attributes)
         return dumps(new_attributes),200
