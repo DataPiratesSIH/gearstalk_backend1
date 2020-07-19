@@ -233,7 +233,7 @@ feature = db.features.find_one({ "video_id": "5f05d0f814e6a15bdc797d12"})
 import time
 import matplotlib.pyplot as plt
 #heatMap
-# '''
+'''
 start = time.time()
 
 data = db.unique_person.find({"video_id": "5f05d0f814e6a15bdc797d12"},{"labels":1, "colors":1,"_id":0})
@@ -269,7 +269,7 @@ import seaborn as sns
 from io import BytesIO
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-fig = plt.figure(figsize=(12,10), dpi= 80)
+fig = plt.figure(figsize=(12,10), dpi= 80,facecolor=(1, 1, 1))
 sns.heatmap(corr, xticklabels=list(list(features.values())[0].keys()), yticklabels=list(features.keys()), cmap='RdYlGn', center=0, annot=True)
 
 # print(df.corr(), df.corr().columns, df.corr().columns)
@@ -409,6 +409,8 @@ print(time.time()-end)
 #     counter = Counter() 
 #     for d in big_data2:  
 #         counter.update(d) 
+
+#     print(big_data2)
       
 #     result = dict(counter) 
 #     # print(result)
@@ -429,4 +431,13 @@ print(time.time()-end)
 #     plt.show()
 
 # index2()
+# import itertools
 
+# feature = db.features.find_one({ "video_id": "5f05d0f814e6a15bdc797d12"})
+# pie_chart = collections.Counter(list(itertools.chain(*[ list(itertools.chain(*[ x['labels'] for x in json.loads(metadata['persons'])])) for metadata in feature['metadata']])))
+# print(pie_chart.keys(),pie_chart.values())
+
+
+
+# print(list(itertools.chain(*[{"wer":"wevrhj","ewyfdjeh":"gcejhb"},{"weer":"weer"}])))
+print([{"wer":"wevrhj","ewyfdjeh":"gcejhb"}]+[{"wer":"wevrhj","ewyfdjeh":"gcejhb"}])
