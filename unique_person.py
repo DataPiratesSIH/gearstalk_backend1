@@ -1,4 +1,5 @@
 import collections
+import pandas as pd
 # from flask import Flask, render_template
 from flask_pymongo import PyMongo
 import pymongo
@@ -277,12 +278,12 @@ sns.heatmap(corr, xticklabels=list(list(features.values())[0].keys()), yticklabe
 plt.title('Relationship between Labels and resp. Colors', fontsize=14)
 plt.xticks(fontsize=8)
 plt.yticks(fontsize=8)
-plt.show()
-# png = BytesIO()
-# FigureCanvasAgg(fig).print_png(png)
-# # plt.close(fig)
-# # print(png.getvalue())
-# print(time.time()-end)
+# plt.show()
+png = BytesIO()
+FigureCanvasAgg(fig).print_png(png)
+plt.close(fig)
+print(png.getvalue())
+print(time.time()-end)
 # '''
 # from collections import Counter
 # from flask import Flask, render_template
