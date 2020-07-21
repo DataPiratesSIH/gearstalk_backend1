@@ -228,7 +228,7 @@ def generateReport(oid):
 
 
 
-@video.route('/searchreport/<oid>', methods=['GET'])
+@report.route('/searchreport/<oid>', methods=['GET'])
 def search_report(oid):
     try:
         if oid == None or len(oid) != 24:
