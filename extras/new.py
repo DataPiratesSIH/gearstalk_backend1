@@ -13,15 +13,19 @@ import time
 import numpy as np
 import ast
 import cv2
+import time
 import seaborn as sns
 import io
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from bson import ObjectId
 
+
+start = time.time()
+
 class PDF(FPDF):
     def header(self):
         # Logo
-        self.image('logo512.png', 10, 8, 15)
+        # self.image('logo512.png', 10, 8, 15)
         # Arial bold 15
         self.set_font('Arial', 'B', 15)
         # Move to the right
@@ -53,7 +57,6 @@ for x in video:
     data.append(["Time",x['time']])
     data.append(["Duration of the video",x['duration']])
     location = db.cctv.find({"_id" : ObjectId(x['location_id'])})
-    # print(list(location))
     for y in location:
         # data.append(["Address", y['formatted_address']])
         data.append(["Street",y['street']])
@@ -63,13 +66,6 @@ for x in video:
         data.append(['Postal Code', y['postal_code']])
         data.append(["Latitude", y['latitude']])
         data.append(["Longitude", y['longitude']])
-    # print(x['name'].key())
-# print(list(video['name']))
-# print(list(video))
-# print(data)
-
-df = pd.DataFrame(data,columns=['Question','Answer'])
-# print(df)
 
 
 image = []
@@ -80,15 +76,6 @@ Year = []
 Unemployment_Rate = []
 table_data = [["Frame Sec", "Number of People"]]
 line_chart = { x['frame_sec'] : len(json.loads(x['persons'])) for x in feature['metadata']}
-for c in feature['metadata']:
-    line_chart_report.append({'frame_sec':c['frame_sec'],'length' : len(json.loads(c['persons']))})
-for x in feature['metadata']:
-    line = [x['frame_sec'],len(json.loads(x['persons']))]
-    table_data.append(line)
-
-line_chart_report =  sorted(line_chart_report, key = lambda i: i['length'],reverse=True)
-# print((line_chart_report)[0]['length'])
-# print(data) 
 Year = list(line_chart.keys())
 Unemployment_Rate = list(line_chart.values())
 fig = plt.figure(figsize=(12,10), dpi= 80)
@@ -153,6 +140,8 @@ image.append(pie_buf)
 # plt.show()
 
 
+
+
 pdf=PDF()
 pdf.alias_nb_pages()
 pdf.add_page()
@@ -162,8 +151,12 @@ pdf.set_font('Times','B',14.0)
 
 pdf.cell(0, 30, txt="A Tabular and Graphical Report of number of people identified in the video", ln = 1, align = 'C')
 
-image_w = 100
-image_h = 80
+image_w = 140
+image_h = 140
+
+
+df = pd.DataFrame(data,columns=['Question','Answer'])
+# print(df)
 
 for i in range(0, len(df)):
     pdf.cell(80, 18, '%s' % (df['Question'].iloc[i]), 1, 0, 'C')
@@ -172,24 +165,26 @@ for i in range(0, len(df)):
 
 pdf.add_page()
 pdf.cell(0, 30, txt="A Tabular and Graphical Report of number of people identified in the video", ln = 1, align = 'C')
-pdf.image(image[0], x=55, y=60, w=image_w, h=image_h)
+pdf.image(image[0], x=35, y=60, w=image_w, h=image_h)
 pdf.ln(1*image_h+15)
 pdf.multi_cell(0,10, "A line graph is a graphical display of information that changes continuously over time. In this case the graph displays the number of people in the video at particular timestamps. ",0, 3 , 'L')
 pdf.ln(30)
-pdf.cell(0,10," Maximum Number of people in any frame of the video = " + str((line_chart_report)[0]['length']) , 0, 1, "L")
+pdf.cell(0,10," Maximum Number of people in any frame of the video = {}".format(max(line_chart.values())) , 0, 1, "L")
 
 
 pdf.add_page()
 pdf.cell(0, 30, txt="A Tabular and Graphical Report of Realation between labels and colors in the video", ln = 1, align = 'C')
-pdf.image(image[1], x=55, y=60, w=image_w, h=image_h)
+pdf.image(image[1], x=25, y=70, w=image_w + 40, h=image_h)
 pdf.ln(1*image_h+15)
 pdf.multi_cell(0,10,'The heat map is a data visualization technique that shows magnitude of a phenomenon as colour in two dimensions. This one in particular highlights the relationship between labels and their respective colours. The colours of respective clothing accessories like jeans,shirts,sweaters,etc range from various hues of grey,blue,brown and silver. Upon observation, we can conclude that the intensity of rosy brown jeans was the highest while dark grey scarfs and jeans were comparable as well.', 0, 1,'L')
 
 pdf.add_page()
 pdf.cell(0, 30, txt="A Tabular and Graphical Report of Realation between labels and colors in the video", ln = 1, align = 'C')
-pdf.image(image[2], x=55, y=60, w=image_w, h=image_h)
+pdf.image(image[2], x=25, y=70, w=image_w + 40, h=image_h)
 pdf.ln(1*image_h+15)
 pdf.multi_cell(0,10,"This pie chart shows the result of a cctv surveillance camera, scanned frame by frame for clothing attributes. The video showcased a number of people wearing various clothing accessories. The different attributes identified are blazers, jeans, sweaters, scarfs, sarees, caps, shirts, jerseys, pants, etc. The pie chart above shows that majority people were wearing sweaters,scarfs and jeans; thereby hinting towards a possibility of cold climate.", 0, 1, 'L')
 
 
-pdf.output('table-using-cell-borders.pdf','D')
+pdf.output('table-using-cell-borders.pdf','f')
+
+print(time.time()-start)
