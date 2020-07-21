@@ -236,7 +236,6 @@ def search_report(oid):
         elif "unique_person" not in db.list_collection_names():
             return jsonify({"success": False, "message": "No Collection features."}), 404
         else:
-            line_chart = { x['frame_sec'] : len(json.loads(x['persons'])) for x in feature['metadata']}
 
             
             return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
