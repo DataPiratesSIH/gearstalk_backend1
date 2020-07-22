@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import os
 import time
 import itertools
@@ -38,7 +40,7 @@ class AutoVivification(dict):
 class PDF(FPDF):
     def header(self):
         # Logo
-        self.image('./logo512.png', 10, 8, 15)
+        # self.image('./logo512.png', 10, 8, 15)
         # Arial bold 15
         self.set_font('Arial', 'B', 15)
         # Move to the right
@@ -123,11 +125,7 @@ def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
     pdf.multi_cell(0,10,"This pie chart shows the result of a cctv surveillance camera, scanned frame by frame for clothing attributes. The video showcased a number of people wearing various clothing accessories. The different attributes identified are blazers, jeans, sweaters, scarfs, sarees, caps, shirts, jerseys, pants, etc. The pie chart above shows that majority people were wearing sweaters,scarfs and jeans; thereby hinting towards a possibility of cold climate.", 0, 1, 'L')
 
 
-    pdf_str = pdf.output('Video_Analysis_Report.pdf','s')
-
-    return pdf_str
-
-
+    return pdf.output(dest='S')
 
 
 '''-----------------------------------
@@ -156,17 +154,71 @@ def addReport():
     oid = res.inserted_id
 
     ## Oid received. Generate PDF Report from oid
-
-    return jsonify({"success": True, "report_link": "https:datapiratessih.github.io"}), 200
-    # except Exception as e:
-    #     return jsonify({"success": False, "message": "No data found in request."}), 400
-
-
+    report  = db.report.find({ "_id": oid})
+    response = make_response(pdf_str)
+    response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
+    response.mimetype = 'application/pdf'
+    return response, 200
 
 
 @report.route('/generatereport/<oid>', methods=['GET'])
 # @jwt_required
 def generateReport(oid):
+    try:
+        if oid == None or len(oid) != 24:
+            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+        elif "report" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection report."}), 404
+        else:
+            report  = db.report.find({ "_id": ObjectId(oid)})
+            response = make_response(pdf_str)
+            response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
+            response.mimetype = 'application/pdf'
+            return response, 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
+
+
+
+@report.route('/searchreport/<oid>', methods=['GET'])
+def search_report(oid):
+    try:
+        if oid == None or len(oid) != 24:
+            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+        elif "unique_person" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection features."}), 404
+        else:
+
+            
+            return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
+
+
+@report.route('/deletereport/<oid>', methods=['DELETE'])
+# @jwt_required
+def deleteReport(oid):
+    if oid == None:
+            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+    else:
+        if "report" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection report."}), 404
+        else:
+            result = db.report.delete_one({"_id": ObjectId(oid)})
+            if (result.deleted_count) > 0:
+                return jsonify({"success": True, "message": "Report successfully deleted."}), 200
+            else: 
+                return jsonify({"success": False, "message": "Report with provided id doesn't exist."}), 404
+
+'''-----------------------------------
+            video-report
+-----------------------------------'''
+
+@report.route('/generatevideoreport/<oid>', methods=['GET'])
+# @jwt_required
+def generateVideoReport(oid):
     try:
         if oid == None or len(oid) != 24:
             return jsonify({"success": False, "message": "No Object Id in param."}), 400
@@ -220,45 +272,10 @@ def generateReport(oid):
             piechart_buf = image_to_buffer(plt)
 
             #generate_pdf
-            Pdf_str = videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf)
-            # files = [
-            #     ('document', ("local_file_to_send", Pdf_str, 'application/octet'))
-            # ]
-            # return send_file(Pdf_str, attachment_filename='python.pdf')
-            return jsonify({"success": True, "report_link": dumps(Pdf_str)}), 200
+            pdf_str = videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf)
+            response = make_response(pdf_str)
+            response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
+            response.mimetype = 'application/pdf'
+            return response, 200
     except Exception as e:
         return f"An Error Occured: {e}"
-        
-
-
-
-@report.route('/searchreport/<oid>', methods=['GET'])
-def search_report(oid):
-    try:
-        if oid == None or len(oid) != 24:
-            return jsonify({"success": False, "message": "No Object Id in param."}), 400
-        elif "unique_person" not in db.list_collection_names():
-            return jsonify({"success": False, "message": "No Collection features."}), 404
-        else:
-
-            
-            return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
-    except Exception as e:
-        return f"An Error Occured: {e}"
-
-
-
-@report.route('/deletereport/<oid>', methods=['DELETE'])
-# @jwt_required
-def deleteReport(oid):
-    if oid == None:
-            return jsonify({"success": False, "message": "No Object Id in param."}), 400
-    else:
-        if "report" not in db.list_collection_names():
-            return jsonify({"success": False, "message": "No Collection report."}), 404
-        else:
-            result = db.report.delete_one({"_id": ObjectId(oid)})
-            if (result.deleted_count) > 0:
-                return jsonify({"success": True, "message": "Report successfully deleted."}), 200
-            else: 
-                return jsonify({"success": False, "message": "Report with provided id doesn't exist."}), 404
