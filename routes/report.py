@@ -3,7 +3,7 @@ import time
 import itertools
 import json
 import requests
-from flask import Blueprint, request, jsonify, render_template, make_response
+from flask import Blueprint, request, jsonify, render_template, make_response, send_file
 from flask_jwt_extended import jwt_required
 from utils.connect import client, db, fs
 from itertools import chain
@@ -14,6 +14,7 @@ from bson import ObjectId
 import seaborn as sns
 import pandas as pd
 import io
+import base64
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from bson.json_util import dumps
 
@@ -37,7 +38,7 @@ class AutoVivification(dict):
 class PDF(FPDF):
     def header(self):
         # Logo
-        # self.image('logo512.png', 10, 8, 15)
+        self.image('./logo512.png', 10, 8, 15)
         # Arial bold 15
         self.set_font('Arial', 'B', 15)
         # Move to the right
@@ -122,9 +123,9 @@ def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
     pdf.multi_cell(0,10,"This pie chart shows the result of a cctv surveillance camera, scanned frame by frame for clothing attributes. The video showcased a number of people wearing various clothing accessories. The different attributes identified are blazers, jeans, sweaters, scarfs, sarees, caps, shirts, jerseys, pants, etc. The pie chart above shows that majority people were wearing sweaters,scarfs and jeans; thereby hinting towards a possibility of cold climate.", 0, 1, 'L')
 
 
-    pdf.output('Video_Analysis_Report.pdf','f')
+    pdf_str = pdf.output('Video_Analysis_Report.pdf','s')
 
-    # return 
+    return pdf_str
 
 
 
@@ -219,16 +220,19 @@ def generateReport(oid):
             piechart_buf = image_to_buffer(plt)
 
             #generate_pdf
-            videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf)
-            
-            return jsonify({"success": True, "report_link": "https:datapiratessih.github.io"}), 200
+            Pdf_str = videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf)
+            # files = [
+            #     ('document', ("local_file_to_send", Pdf_str, 'application/octet'))
+            # ]
+            # return send_file(Pdf_str, attachment_filename='python.pdf')
+            return jsonify({"success": True, "report_link": dumps(Pdf_str)}), 200
     except Exception as e:
         return f"An Error Occured: {e}"
         
 
 
 
-@video.route('/searchreport/<oid>', methods=['GET'])
+@report.route('/searchreport/<oid>', methods=['GET'])
 def search_report(oid):
     try:
         if oid == None or len(oid) != 24:

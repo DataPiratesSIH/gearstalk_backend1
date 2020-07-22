@@ -62,12 +62,11 @@ def search():
     try:
         data = request.get_json()
         video_id = data['video_id']
-        print(video_id)
+        print(data['attributes'])
         new_attributes = []
         for a in data['attributes']:
             labels = [x.lower() for x in a['labels']]
-            colors = [nearest_colour( colours, tuple([c['rgb']['r'],c['rgb']['g'],c['rgb']['b']]) )[3] for c in a['colors']]
-            print(labels,colors)
+            colors = [nearest_colour( colours, tuple([c['rgb']['r'],c['rgb']['g'],c['rgb']['b']]))[3] for c in a['colors']]
             if len(labels) == 0 and len(colors) == 0:
                 continue
             else:
