@@ -57,7 +57,7 @@ def nearest_colour( subjects, query ):
 
 # returns the list of unique_persons with the best match
 @query.route('/search', methods=['POST'])
-# @jwt_required
+@jwt_required
 def search():
     try:
         data = request.get_json()
@@ -84,7 +84,7 @@ def search():
 
 # returns the list of labels and colors extracted from a text
 @query.route('/text_search', methods=['POST'])
-# @jwt_required
+@jwt_required
 def text_search():
     try:
         data = request.get_json()
@@ -98,7 +98,7 @@ def text_search():
 
 # returns metadata of the whole video
 @query.route('/metadata/<oid>', methods=['GET'])
-# @jwt_required
+@jwt_required
 def video_metadata(oid):
     try:
         print(oid)
@@ -115,7 +115,7 @@ def video_metadata(oid):
 
 # returns the list of unique_persons with the best match
 # @query.route('/video/<oid>', methods=['GET'])
-# # @jwt_required
+# @jwt_required
 # def video_search_person(oid):
 #     try:
 #         if oid == None or len(oid) != 24:

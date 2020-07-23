@@ -246,7 +246,7 @@ def sortBy(sortVal, videos):
 
 
 @video.route('/getvideo', methods=['GET'])
-# @jwt_required
+@jwt_required
 def getVideo():
     if "video" not in db.list_collection_names():
         return jsonify([]), 200
@@ -258,7 +258,7 @@ def getVideo():
 
 
 @video.route('/getvideobycctv/<oid>', methods=['GET'])
-# @jwt_required
+@jwt_required
 def getVideoByCCTV(oid):
     if oid == None:
         return jsonify({"success": False, "message": "No Object Id in param."}), 400
@@ -272,7 +272,7 @@ def getVideoByCCTV(oid):
 
 # Get Video by id
 @video.route('/getvideobyid/<oid>', methods=['GET'])
-# @jwt_required
+@jwt_required
 def getVideoById(oid):
     if oid == None:
         return jsonify({"success": False, "message": "No Object Id in param."}), 400
@@ -287,7 +287,7 @@ def getVideoById(oid):
 
 
 @video.route('getvideostats', methods=['GET'])
-# @jwt_required
+@jwt_required
 def getVideoStats():
     if "video" not in db.list_collection_names():
         return jsonify({"success": False, "message": "No Video Collection."}), 400
@@ -299,7 +299,7 @@ def getVideoStats():
 
 
 @video.route('getrecentvideo', methods=['GET'])
-# @jwt_required
+@jwt_required
 def getRecentVideo():
     if "video" not in db.list_collection_names():
         return jsonify({"success": False, "message": "No Video Collection."}), 400
@@ -313,7 +313,7 @@ def getRecentVideo():
 
 
 @video.route('/search', methods=['POST'])
-# @jwt_required
+@jwt_required
 def getVideoSearch():
     data = json.loads(request.data)
     search = data.get("search")
@@ -330,7 +330,7 @@ def getVideoSearch():
 
 
 @video.route('/filter', methods=['POST'])
-# @jwt_required
+@jwt_required
 def getVideoFilter():
     data = json.loads(request.data)
     filter = data.get("filter")
@@ -352,18 +352,13 @@ def getVideoFilter():
 
 
 @video.route('/addvideo', methods=['POST'])
-# @jwt_required
+@jwt_required
 def addVideo():
     file = request.files['video']
     timestamp = request.form.get("time")
     location = request.form.get("location")
-    process = request.form.get("process")
     name = file.filename
     name = os.path.splitext(name)[0]
-    if process == "true":
-        process = True
-    else:
-        process = False
     if file and allowed_file(file.filename):
         if file.filename == None:
             filename = "Unknown_video"
@@ -460,7 +455,7 @@ def updateVideo():
 
 
 @video.route('/updatevideolocation', methods=['PATCH'])
-# @jwt_required
+@jwt_required
 def updateVideoLocation():
     data = json.loads(request.data)
     video_id = data.get("video_id")
@@ -485,7 +480,7 @@ def updateVideoLocation():
 
 # Update Video Timestamp
 @video.route('/updatevideotimestamp', methods=['PATCH'])
-# @jwt_required
+@jwt_required
 def updateVideoTimestamp():
     data = json.loads(request.data)
     video_id = data.get("video_id")
@@ -523,7 +518,7 @@ def updateVideoTimestamp():
 
 # Delete Video by id
 @video.route('/deletevideo/<oid>', methods=['DELETE'])
-# @jwt_required
+@jwt_required
 def deleteVideo(oid):
     if oid == None:
         return jsonify({"success": False, "message": "No Object Id in param."}), 400

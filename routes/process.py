@@ -31,7 +31,7 @@ def rgb2hex(r, g, b): return f"#{r:02x}{g:02x}{b:02x}"
 
 
 @process.route('/processvideo/<oid>', methods=['GET'])
-# @jwt_required
+@jwt_required
 def processVideo(oid):
     print(oid)
     if oid == None or len(oid) != 24:
@@ -64,7 +64,7 @@ def processVideo(oid):
 
 
 @process.route('/processcropped', methods=['POST'])
-# @jwt_required
+@jwt_required
 def processCroppedImages():
     uploaded_files = request.files.getlist("files")
     print(uploaded_files)

@@ -179,7 +179,7 @@ def searchPDF_format(report):
 -----------------------------------'''
 
 @report.route('/getreport/<oid>', methods=['GET'])
-# @jwt_required
+@jwt_required
 def getReport(oid):
     if oid == None:
         return jsonify({"success": False, "message": "No Object Id in param."}), 400
@@ -190,7 +190,7 @@ def getReport(oid):
         return dumps(reports), 200
 
 @report.route('/addreport', methods=['POST'])
-# @jwt_required
+@jwt_required
 def addReport():
     report = json.loads(request.data)
     if report == None:
@@ -200,8 +200,9 @@ def addReport():
     oid = res.inserted_id
 
     ## Oid received. Generate PDF Report from oid
-    report  = db.report.find_one({ "_id": ObjectId(oid)})
-    pdf_str = searchPDF_format(report)
+    newReport  = db.report.find_one({ "_id": oid})
+    print(newReport)
+    pdf_str = searchPDF_format(newReport)
     response = make_response(pdf_str)
     response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
     response.mimetype = 'application/pdf'
@@ -209,7 +210,7 @@ def addReport():
 
 
 @report.route('/generatereport/<oid>', methods=['GET'])
-# @jwt_required
+@jwt_required
 def generateReport(oid):
     try:
         if oid == None or len(oid) != 24:
@@ -248,7 +249,7 @@ def search_report(oid):
 
 
 @report.route('/deletereport/<oid>', methods=['DELETE'])
-# @jwt_required
+@jwt_required
 def deleteReport(oid):
     if oid == None:
             return jsonify({"success": False, "message": "No Object Id in param."}), 400
@@ -267,7 +268,7 @@ def deleteReport(oid):
 -----------------------------------'''
 
 @report.route('/generatevideoreport/<oid>', methods=['GET'])
-# @jwt_required
+@jwt_required
 def generateVideoReport(oid):
     try:
         if oid == None or len(oid) != 24:
