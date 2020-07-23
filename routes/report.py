@@ -131,11 +131,11 @@ def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
 def searchPDF_format(report):
     data =[]
     for x in report['results']:
-        instance = []
         if not x:
             # print("List is empty")
             pass
         else:
+            instance = []
             for i in x:
                 y = {}
                 y.update({'Date':i['date']})
@@ -155,7 +155,7 @@ def searchPDF_format(report):
     pdf.set_font('Times','B',15.0)
     pdf.cell(0,20, "Report of User's Search Result", 0, 2, 'C')
     for i in range(len(data)):
-        if not i:
+        if i==[]:
             pdf.set_font('Times','B',14.0)
             pdf.cell(0,10,"Person "+str(i+1)+" : NOT FOUND!!", 0, 1, "L")
             pdf.cell(0,10," ", 0, 1, "L")
@@ -200,8 +200,7 @@ def addReport():
     oid = res.inserted_id
 
     ## Oid received. Generate PDF Report from oid
-    newReport  = db.report.find_one({ "_id": oid})
-    print(newReport)
+    newReport  = db.report.find_one({ "_id": ObjectId(oid)})
     pdf_str = searchPDF_format(newReport)
     response = make_response(pdf_str)
     response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
