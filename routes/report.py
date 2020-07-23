@@ -40,9 +40,9 @@ class AutoVivification(dict):
 class PDF(FPDF):
     def header(self):
         # Logo
-        # self.image('./logo512.png', 10, 8, 15)
+        self.image('logo512.png', 10, 8, 15)
         # Arial bold 15
-        self.set_font('Arial', 'B', 15)
+        self.set_font('Arial', 'B', 16)
         # Move to the right
         self.cell(80)
         # Title
@@ -124,6 +124,52 @@ def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
     pdf.ln(1*image_h+15)
     pdf.multi_cell(0,10,"This pie chart shows the result of a cctv surveillance camera, scanned frame by frame for clothing attributes. The video showcased a number of people wearing various clothing accessories. The different attributes identified are blazers, jeans, sweaters, scarfs, sarees, caps, shirts, jerseys, pants, etc. The pie chart above shows that majority people were wearing sweaters,scarfs and jeans; thereby hinting towards a possibility of cold climate.", 0, 1, 'L')
 
+    return pdf.output(dest='S')
+
+
+
+def searchPDF_format(report):
+    data =[]
+    for x in report['results']:
+        instance = []
+        if not x:
+            # print("List is empty")
+            pass
+        else:
+            for i in x:
+                y = {}
+                y.update({'Date':i['date']})
+                y.update({'Time':i['time']})
+                y.update({'City':i['city']})
+                y.update({'SubLocality':i['sublocality']})
+                y.update({'State':i['state']})
+                y.update({'Country':i['country']})
+                y.update({'Labels':i['labels']})
+                y.update({'Colours':i['colors']})
+                instance.append(y)
+        data.append(instance)
+
+    pdf=PDF()
+    pdf.alias_nb_pages()
+    pdf.add_page()
+    pdf.set_font('Times','B',15.0)
+    pdf.cell(0,20, "Report of User's Search Result", 0, 2, 'C')
+    for i in range(len(data)):
+        if not i:
+            pdf.set_font('Times','B',14.0)
+            pdf.cell(0,10,"Person "+str(i+1)+" : NOT FOUND!!", 0, 1, "L")
+            pdf.cell(0,10," ", 0, 1, "L")
+        else:
+            pdf.set_font('Times','B',14.0)
+            pdf.cell(0,10,"Person "+str(i+1)+" : Found " + str(len(data[i])) + " with the provided details of clothing attributes.", 0, 1, "L")
+            for row in range(len(data[i])):
+                pdf.set_font('Times','B',12.0)
+                pdf.cell(0,15, "Details of the Instance " + str(row + 1)+ " of Person " + str(i+1), 0, 1 , 'L')
+                pdf.set_font('Times','',12.0)
+                pdf.multi_cell(0,10, "The selected person was found on "+ data[i][row]['Date']+" at " +data[i][row]['Time']+ ". The Camera spotted the person at "+data[i][row]['SubLocality']+ ", " +data[i][row]['City']+ ", "+data[i][row]['State']+ ", "+data[i][row]['Country']+ ". The Person is found wearing " + ", ".join(data[i][row]['Labels']) + " of colors " + ", ".join(data[i][row]['Colours']) + " respectively.",0, 3, "L")
+                pdf.ln(28)
+            if(i < len(data)-1):
+                pdf.add_page()
 
     return pdf.output(dest='S')
 
@@ -154,7 +200,8 @@ def addReport():
     oid = res.inserted_id
 
     ## Oid received. Generate PDF Report from oid
-    report  = db.report.find({ "_id": oid})
+    report  = db.report.find_one({ "_id": ObjectId(oid)})
+    pdf_str = searchPDF_format(report)
     response = make_response(pdf_str)
     response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
     response.mimetype = 'application/pdf'
@@ -170,7 +217,10 @@ def generateReport(oid):
         elif "report" not in db.list_collection_names():
             return jsonify({"success": False, "message": "No Collection report."}), 404
         else:
-            report  = db.report.find({ "_id": ObjectId(oid)})
+            report  = db.report.find_one({ "_id": ObjectId(oid)})
+
+            #generate report
+            pdf_str = searchPDF_format(report)
             response = make_response(pdf_str)
             response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
             response.mimetype = 'application/pdf'
