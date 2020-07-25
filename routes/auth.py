@@ -4,14 +4,22 @@ import json,requests
 from utils.connect import client, db, fs
 
 auth = Blueprint("auth", __name__)
-
+authEmails = ['elvis8333', 'mahendrasir', 'amurto8317', 'bhate8318', 'carol8320', 'mahesh8328', 'sherwin8358', 'cassia8374']
 @auth.route("/signup", methods=["POST"])
 def register():
     user = json.loads(request.data)
     print(user)
+    flag = False
     first_name = user.get("first_name")
     last_name = user.get("last_name")
     email = user.get("email")
+    for ae in authEmails:
+        if ae in email:
+            print("True")
+            flag = True
+            break
+    if not flag:
+        return jsonify({ "success": False, "message": "You are not authorized. Nice try!"}), 403
     password = user.get("password")
     if first_name == None or last_name == None or email == None or password == None:
         return jsonify({"success": False, "message": "Fields are empty."}), 401
