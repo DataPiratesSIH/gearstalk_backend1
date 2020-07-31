@@ -31,5 +31,6 @@ jobs:
         script: |
           cd /root/gearstalk_backend1
           git pull
+          echo "hello world"
           docker-compose up -d --build
 
