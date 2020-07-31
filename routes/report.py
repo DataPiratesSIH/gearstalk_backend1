@@ -17,6 +17,7 @@ import seaborn as sns
 import pandas as pd
 import io
 import base64
+import datetime
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from bson.json_util import dumps
 
@@ -128,7 +129,7 @@ def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
 
 
 
-def searchPDF_format(report):
+def searchPDF_format(report, user):
     data =[]
     for x in report['results']:
         if not x:
@@ -152,9 +153,30 @@ def searchPDF_format(report):
     pdf=PDF()
     pdf.alias_nb_pages()
     pdf.add_page()
+    pdf.set_font('Arial','B',15)
+    pdf.cell(71 ,5,'',0,0)
+    pdf.cell(59 ,5,'',0,0)
+    pdf.cell(59 ,5,'Details',0,1)
+
+    pdf.set_font('Arial','',10)
+
+    pdf.cell(130 ,5,'Date: {}'.format(report['Date']),0,0)
+    pdf.cell(25 ,5,'UserName:',0,0)
+    pdf.cell(34 ,5,user['first_name'],0,1)
+
+    pdf.cell(130 ,5,'Time: {}'.format(report['Time']),0,0)
+    pdf.cell(25 ,5,'E-mail ID:',0,0)
+    pdf.cell(34 ,5,user['email'],0,1)
+    
+    pdf.cell(130 ,5,'',0,0)
+    # pdf.cell(25 ,5,'Report No:',0,0)
+    # pdf.cell(34 ,5,report['name'],0,1)
     pdf.set_font('Times','B',15.0)
-    pdf.cell(0,20, "Report of User's Search Result", 0, 2, 'C')
+    pdf.cell(0,20, "Search Results", 0, 2, 'C')
     for i in range(len(data)):
+        pdf.set_font('Times','',14.0) 
+        pdf.set_fill_color(120,250,140)
+        pdf.cell(150, 10, 'Personal Details', 0, 2, 'C', fill=True)
         if i==[]:
             pdf.set_font('Times','B',14.0)
             pdf.cell(0,10,"Person "+str(i+1)+" : NOT FOUND!!", 0, 1, "L")
@@ -170,7 +192,7 @@ def searchPDF_format(report):
                 pdf.ln(28)
             if(i < len(data)-1):
                 pdf.add_page()
-
+    
     return pdf.output(dest='S')
 
 
@@ -196,12 +218,16 @@ def addReport():
     if report == None:
         return jsonify({"success": False, "message": "No data found in request."}), 400
     # try:
+    timestamp = datetime.datetime.now()
+    report['Date'] = datetime.datetime.strftime(timestamp,"%d %B %Y, %A") 
+    report['Time'] = datetime.datetime.strftime(timestamp,"%I:%M %p") 
     res = db.report.insert_one(report)
     oid = res.inserted_id
 
     ## Oid received. Generate PDF Report from oid
     newReport  = db.report.find_one({ "_id": ObjectId(oid)})
-    pdf_str = searchPDF_format(newReport)
+    user = db.users.find_one({"_id": ObjectId(report['userId'])})
+    pdf_str = searchPDF_format(newReport, user)
     response = make_response(pdf_str)
     response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
     response.mimetype = 'application/pdf'
@@ -218,9 +244,10 @@ def generateReport(oid):
             return jsonify({"success": False, "message": "No Collection report."}), 404
         else:
             report  = db.report.find_one({ "_id": ObjectId(oid)})
+            user = db.users.find_one({"_id": ObjectId(report['userId'])})
 
             #generate report
-            pdf_str = searchPDF_format(report)
+            pdf_str = searchPDF_format(report, user)
             response = make_response(pdf_str)
             response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
             response.mimetype = 'application/pdf'

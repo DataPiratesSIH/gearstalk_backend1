@@ -86,15 +86,39 @@ print(data)
 pdf=PDF()
 pdf.alias_nb_pages()
 pdf.add_page()
+
+pdf.set_font('Arial','B',15)
+pdf.cell(71 ,5,'TimeStamp',0,0)
+pdf.cell(59 ,5,'',0,0)
+pdf.cell(59 ,5,'Details',0,1)
+
+pdf.set_font('Arial','',10)
+
+pdf.cell(130 ,5,'Date: {}'.format("12th Jan 2019"),0,0)
+pdf.cell(25 ,5,'User ID:',0,0)
+pdf.cell(34 ,5,'gearstalk@gmail.com',0,1)
+
+pdf.cell(130 ,5,'Time: {}'.format("12.01pm"),0,0)
+pdf.cell(25 ,5,'UserName:',0,0)
+pdf.cell(34 ,5,'GearStalk',0,1)
+ 
+pdf.cell(130 ,5,'',0,0)
+pdf.cell(25 ,5,'Report No:',0,0)
+pdf.cell(34 ,5,'ORD001',0,1)
+
 pdf.set_font('Times','B',14.0) 
 # th = pdf.font_size
 # epw = pdf.w - 2*pdf.l_margin
 # col_width = epw/2
-pdf.cell(0,20, "Report of User's Search Result", 0, 2, 'C')
+pdf.cell(0,20, "Search Results", 0, 2, 'C')
 for i in range(len(data)):
+    pdf.set_font('Times','',14.0) 
+    pdf.set_fill_color(120,250,140)
+    pdf.cell(150, 10, 'Personal Details', 0, 2, 'C', fill=True)
     if i == []:
         pdf.cell(0,10,"The person "+str(i)+" is not found ", 0, 1, "L")
     else:
+        pdf.cell(180, 8, "qwerty", 0, 1, "L")
         pdf.cell(0,10,"The number of Persons found with the provided details of clothing attributes are " + str(len(data[i])), 0, 1, "L")
         # print("The number of Persons found with the provided details of clothing attributes are " + str(len(data[i])))
         # print(data[i])
