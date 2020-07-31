@@ -33,5 +33,7 @@ jobs:
         password: ${{ secrets.BACKEND_PASSWORD }}
         port: ${{ secrets.BACKEND_PORT }}
         script: |
-          ls
+          cd /app/gearstalk_backend1
+          git pull
+          docker-compose up -d --build
 
