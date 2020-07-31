@@ -20,6 +20,16 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
+    
+    - name: check
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.BACKEND_HOST }}
+        username: ${{ secrets.BACKEND_USERNAME }}
+        password: ${{ secrets.BACKEND_PASSWORD }}
+        port: ${{ secrets.BACKEND_PORT }}
+        script: |
+          echo "it works"
 
     - name: Deploy package to digitalocean
       uses: appleboy/ssh-action@master
