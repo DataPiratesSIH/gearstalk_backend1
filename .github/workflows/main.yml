@@ -32,5 +32,4 @@ jobs:
           cd /root/gearstalk_backend1
           git pull
           echo "hello world"
-          ls
 
