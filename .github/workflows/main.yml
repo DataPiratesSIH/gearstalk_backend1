@@ -28,12 +28,10 @@ jobs:
     - name: Deploy package to digitalocean
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: ${{ secrets.PORT }}
+        host: ${{ secrets.FRONTEND_HOST }}
+        username: ${{ secrets.FRONTEND_USERNAME }}
+        password: ${{ secrets.FRONTEND_PASSWORD }}
+        port: ${{ secrets.FRONTEND_PORT }}
         script: |
-          cd /app/gearstalk_backend1
-          git pull
-          docker-compose up -d --build
+          ls
 
