@@ -62,11 +62,11 @@ for row in data:
  
     pdf.ln(2*th)
 
-pdf.cell(100,5,"fhfytujf",1,0);
-pdf.set_y(pdf.get_y() +5);
-pdf.cell(50,4,'First \n Second :\nthird:\nhjfvcsz',0,1,'L');
+pdf.cell(50,5,"fhfytujf",1,0);
+pdf.set_xy(10,5);
+pdf.cell(10,4,'First \n Second :\nthird:\nhjfvcsz',0,1,'L');
 # pdf.set_x(pdf.get_x() - 189);
-# pdf.set_y(pdf.get_y() +5);
+pdf.set_y(pdf.get_y() +5);
 pdf.cell(50,4,'second ',0,1,'L');
 
 # pdf.cell(50,4,'March/2020 ',0,1,'L');

@@ -47,10 +47,11 @@ db = client.get_database('gearstalk')
 data = []
 dataframe = []
 
-report = db.report.find_one({ "_id": ObjectId("5f192f1522c02ecd4c3b1168")})
+report = db.report.find_one({ "_id": ObjectId("5f23cd35fda6c3b001fa1b89")})
 # print(report['results'])
 # print
 for x in report['results']:
+    instance = []
     # frame_sec = []
     # time = []
     # print(i['time']) 
@@ -58,7 +59,6 @@ for x in report['results']:
     if not x:
         print("List is empty")
     else:  
-        instance = []
         # print(x)
         for i in x:
             # print(i)
@@ -114,20 +114,24 @@ pdf.cell(0,20, "Search Results", 0, 2, 'C')
 for i in range(len(data)):
     pdf.set_font('Times','',14.0) 
     pdf.set_fill_color(120,250,140)
-    pdf.cell(150, 10, 'Personal Details', 0, 2, 'C', fill=True)
+    pdf.cell(150, 10, 'Personal Details', 1, 2, 'C', fill=True)
+    pdf.set_xy(pdf.get_x() + 5, pdf.get_y() + 5)
     if i == []:
         pdf.cell(0,10,"The person "+str(i)+" is not found ", 0, 1, "L")
     else:
         pdf.cell(180, 8, "qwerty", 0, 1, "L")
+        pdf.set_xy(pdf.get_x() + 5, pdf.get_y() + 5)
         pdf.cell(0,10,"The number of Persons found with the provided details of clothing attributes are " + str(len(data[i])), 0, 1, "L")
         # print("The number of Persons found with the provided details of clothing attributes are " + str(len(data[i])))
         # print(data[i])
         for row in range(len(data[i])):
             # Enter data in colums
             print(data[i][row]['Date'])
+            pdf.set_xy(pdf.get_x() + 5, pdf.get_y() + 5)
             pdf.cell(0,15, "Details of the Instance " + str(row)+ " of Person " + str(i)+ " are:", 0, 1 , 'L')
             # print(row['Date'])
             # print("The selected person was found on "+ row['Date']+" at " +row['Time']+ ". The Camera spotted the person at "+row['SubLocality']+ ", " +row['City']+ ", "+row['State']+ ", "+row['Country']+ ". The Person is found wearing the searched clothes.")
+            pdf.set_xy(pdf.get_x() + 5, pdf.get_y() + 5)
             pdf.multi_cell(0,10, "The selected person was found on "+ data[i][row]['Date']+" at " +data[i][row]['Time']+ ". The Camera spotted the person at "+data[i][row]['SubLocality']+ ", " +data[i][row]['City']+ ", "+data[i][row]['State']+ ", "+data[i][row]['Country']+ ". The Person is found wearing the searched clothes.",0, 3, "L")
             pdf.ln(28)
             # Notice the use of the function str to coerce any input to the 
@@ -139,3 +143,12 @@ for i in range(len(data)):
         if(i < len(data)-1):
             pdf.add_page()
 pdf.output('table.pdf','F')
+
+
+
+
+
+# Bar Chart: It Illustrates the number of people wearing a particular type of clothing
+# Line Chart: The graph shows how crowded the area is, at a specific time frame.
+# Pie Chart: The graph shows the overall overview of the footage with labels and their colors at a specific time frame.
+# Toggle Chart: The Illustrates the correlation between a particular type of clothing and their respective colors.

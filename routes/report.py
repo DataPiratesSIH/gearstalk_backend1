@@ -132,11 +132,11 @@ def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
 def searchPDF_format(report, user):
     data =[]
     for x in report['results']:
+        instance = []
         if not x:
             # print("List is empty")
             pass
         else:
-            instance = []
             for i in x:
                 y = {}
                 y.update({'Date':i['date']})
@@ -169,27 +169,51 @@ def searchPDF_format(report, user):
     pdf.cell(34 ,5,user['email'],0,1)
     
     pdf.cell(130 ,5,'',0,0)
-    # pdf.cell(25 ,5,'Report No:',0,0)
-    # pdf.cell(34 ,5,report['name'],0,1)
+    pdf.cell(25 ,5,'Report No:',0,0)
+    pdf.cell(34 ,5,report['name'],0,1)
     pdf.set_font('Times','B',15.0)
-    pdf.cell(0,20, "Search Results", 0, 2, 'C')
+    pdf.cell(0,20, "Search Results", 0, 1, 'C')
     for i in range(len(data)):
-        pdf.set_font('Times','',14.0) 
-        pdf.set_fill_color(120,250,140)
-        pdf.cell(150, 10, 'Personal Details', 0, 2, 'C', fill=True)
-        if i==[]:
+        pdf.set_font('Times','B',14.0) 
+        pdf.cell(150, 10, 'Results for Person '+ str(i+1) +' of Search Query', 0, 2, 'L')
+        pdf.cell(150, 10,'', 0, 2, 'C')
+        if data[i]==[]:
+            pdf.set_x(pdf.get_x()+75)
             pdf.set_font('Times','B',14.0)
             pdf.cell(0,10,"Person "+str(i+1)+" : NOT FOUND!!", 0, 1, "L")
             pdf.cell(0,10," ", 0, 1, "L")
         else:
-            pdf.set_font('Times','B',14.0)
-            pdf.cell(0,10,"Person "+str(i+1)+" : Found " + str(len(data[i])) + " with the provided details of clothing attributes.", 0, 1, "L")
             for row in range(len(data[i])):
-                pdf.set_font('Times','B',12.0)
-                pdf.cell(0,15, "Details of the Instance " + str(row + 1)+ " of Person " + str(i+1), 0, 1 , 'L')
+                pdf.set_x(pdf.get_x()+20)
                 pdf.set_font('Times','',12.0)
-                pdf.multi_cell(0,10, "The selected person was found on "+ data[i][row]['Date']+" at " +data[i][row]['Time']+ ". The Camera spotted the person at "+data[i][row]['SubLocality']+ ", " +data[i][row]['City']+ ", "+data[i][row]['State']+ ", "+data[i][row]['Country']+ ". The Person is found wearing " + ", ".join(data[i][row]['Labels']) + " of colors " + ", ".join(data[i][row]['Colours']) + " respectively.",0, 3, "L")
-                pdf.ln(28)
+                pdf.set_fill_color(56, 158, 201)
+                pdf.cell(150, 10, 'Person: ' + str(row + 1)+ '  Details', 0, 2, 'C', fill=True)
+                pdf.set_fill_color(224, 224, 224)
+                pdf.cell(74 ,5,'Date',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,data[i][row]['Date'],0,1,'C',fill=True)
+                pdf.set_x(pdf.get_x()+20)
+                pdf.cell(74 ,5,'Time',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,data[i][row]['Time'],0,1,'C',fill=True)
+                pdf.set_x(pdf.get_x()+20)
+                pdf.cell(74 ,5,'SubLocality',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,data[i][row]['SubLocality'] +', '+ data[i][row]['City'],0,1,'C',fill=True)
+                pdf.set_x(pdf.get_x()+20)
+                pdf.cell(74 ,5,'State',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,data[i][row]['State']+', '+ data[i][row]['Country'],0,1,'C',fill=True)
+                pdf.set_x(pdf.get_x()+20)
+                pdf.cell(74 ,5,'Labels',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,str(", ".join(data[i][row]['Labels'])),0,1,'C',fill=True)
+                pdf.set_x(pdf.get_x()+20)
+                pdf.cell(74 ,5,'Colors',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,str(", ".join(data[i][row]['Colours'])),0,1,'C',fill=True)
+                pdf.cell(150, 10,'', 0, 2, 'C')
+                
             if(i < len(data)-1):
                 pdf.add_page()
     
