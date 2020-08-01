@@ -48,7 +48,7 @@ def toggle_chart(oid):
             cc = Counter(meta)
             features = [{"from": key.split(",")[0], "to": key.split(",")[
                 1], "value": cc[key]} for key in cc]
-            return jsonify({"status": True, "message": "Toggle Chord Chart!!", "metadata": dumps(features)}), 200
+            return jsonify({"status": True, "message": "Toggle Chord Chart!!", "metadata": features}), 200
     except Exception as e:
         return f"An Error Occured: {e}"
 
