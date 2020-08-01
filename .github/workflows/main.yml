@@ -37,6 +37,6 @@ jobs:
           git pull
           docker container stop $(docker container ls -aq)
           docker container rm $(docker container ls -aq)
-          docker system prune -a
+          docker system prune -a -y
           docker-compose up -d --build
 
