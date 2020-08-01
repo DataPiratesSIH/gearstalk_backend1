@@ -228,19 +228,19 @@ def generateReport(oid):
 
 
 
-@video.route('/searchreport/<oid>', methods=['GET'])
-def search_report(oid):
-    try:
-        if oid == None or len(oid) != 24:
-            return jsonify({"success": False, "message": "No Object Id in param."}), 400
-        elif "unique_person" not in db.list_collection_names():
-            return jsonify({"success": False, "message": "No Collection features."}), 404
-        else:
+    @video.route('/searchreport/<oid>', methods=['GET'])
+    def search_report(oid):
+        try:
+            if oid == None or len(oid) != 24:
+                return jsonify({"success": False, "message": "No Object Id in param."}), 400
+            elif "unique_person" not in db.list_collection_names():
+                return jsonify({"success": False, "message": "No Collection features."}), 404
+            else:
 
-            
-            return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
-    except Exception as e:
-        return f"An Error Occured: {e}"
+                
+                return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
+        except Exception as e:
+            return f"An Error Occured: {e}"
 
 
 
