@@ -69,7 +69,7 @@ def video(fileid):
     return rv
 
 @helpers.route('/speech', methods=['POST']) 
-# @jwt_required
+@jwt_required
 def speech():
     speech = request.files['speech']
     name = 'saves/' + randomString() + '.wav'

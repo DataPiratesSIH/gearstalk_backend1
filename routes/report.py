@@ -1,9 +1,11 @@
+import matplotlib
+matplotlib.use('Agg')
 import os
 import time
 import itertools
 import json
 import requests
-from flask import Blueprint, request, jsonify, render_template, make_response
+from flask import Blueprint, request, jsonify, render_template, make_response, send_file
 from flask_jwt_extended import jwt_required
 from utils.connect import client, db, fs
 from itertools import chain
@@ -14,6 +16,8 @@ from bson import ObjectId
 import seaborn as sns
 import pandas as pd
 import io
+import base64
+import datetime
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from bson.json_util import dumps
 
@@ -37,9 +41,9 @@ class AutoVivification(dict):
 class PDF(FPDF):
     def header(self):
         # Logo
-        # self.image('logo512.png', 10, 8, 15)
+        self.image('logo512.png', 10, 8, 15)
         # Arial bold 15
-        self.set_font('Arial', 'B', 15)
+        self.set_font('Arial', 'B', 16)
         # Move to the right
         self.cell(80)
         # Title
@@ -121,12 +125,99 @@ def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
     pdf.ln(1*image_h+15)
     pdf.multi_cell(0,10,"This pie chart shows the result of a cctv surveillance camera, scanned frame by frame for clothing attributes. The video showcased a number of people wearing various clothing accessories. The different attributes identified are blazers, jeans, sweaters, scarfs, sarees, caps, shirts, jerseys, pants, etc. The pie chart above shows that majority people were wearing sweaters,scarfs and jeans; thereby hinting towards a possibility of cold climate.", 0, 1, 'L')
 
-
-    pdf.output('Video_Analysis_Report.pdf','f')
-
-    # return 
+    return pdf.output(dest='S')
 
 
+
+def searchPDF_format(report, user):
+    data =[]
+    for x in report['results']:
+        instance = []
+        if not x:
+            # print("List is empty")
+            pass
+        else:
+            for i in x:
+                y = {}
+                y.update({'Date':i['date']})
+                y.update({'Time':i['time']})
+                y.update({'City':i['city']})
+                y.update({'SubLocality':i['sublocality']})
+                y.update({'State':i['state']})
+                y.update({'Country':i['country']})
+                y.update({'Labels':i['labels']})
+                y.update({'Colours':i['colors']})
+                instance.append(y)
+        data.append(instance)
+
+    pdf=PDF()
+    pdf.alias_nb_pages()
+    pdf.add_page()
+    pdf.set_font('Arial','B',15)
+    pdf.cell(71 ,5,'',0,0)
+    pdf.cell(59 ,5,'',0,0)
+    pdf.cell(59 ,5,'Details',0,1)
+
+    pdf.set_font('Arial','',10)
+
+    pdf.cell(130 ,5,'Date: {}'.format(report['Date']),0,0)
+    pdf.cell(25 ,5,'UserName:',0,0)
+    pdf.cell(34 ,5,user['first_name'],0,1)
+
+    pdf.cell(130 ,5,'Time: {}'.format(report['Time']),0,0)
+    pdf.cell(25 ,5,'E-mail ID:',0,0)
+    pdf.cell(34 ,5,user['email'],0,1)
+    
+    pdf.cell(130 ,5,'',0,0)
+    pdf.cell(25 ,5,'Report No:',0,0)
+    pdf.cell(34 ,5,report['name'],0,1)
+    pdf.set_font('Times','B',15.0)
+    pdf.cell(0,20, "Search Results", 0, 1, 'C')
+    for i in range(len(data)):
+        pdf.set_font('Times','B',14.0) 
+        pdf.cell(150, 10, 'Results for Person '+ str(i+1) +' of Search Query', 0, 2, 'L')
+        pdf.cell(150, 10,'', 0, 2, 'C')
+        if data[i]==[]:
+            pdf.set_x(pdf.get_x()+75)
+            pdf.set_font('Times','B',14.0)
+            pdf.cell(0,10,"Person "+str(i+1)+" : NOT FOUND!!", 0, 1, "L")
+            pdf.cell(0,10," ", 0, 1, "L")
+        else:
+            for row in range(len(data[i])):
+                pdf.set_x(pdf.get_x()+20)
+                pdf.set_font('Times','',12.0)
+                pdf.set_fill_color(56, 158, 201)
+                pdf.cell(150, 10, 'Person: ' + str(row + 1)+ '  Details', 0, 2, 'C', fill=True)
+                pdf.set_fill_color(224, 224, 224)
+                pdf.cell(74 ,5,'Date',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,data[i][row]['Date'],0,1,'C',fill=True)
+                pdf.set_x(pdf.get_x()+20)
+                pdf.cell(74 ,5,'Time',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,data[i][row]['Time'],0,1,'C',fill=True)
+                pdf.set_x(pdf.get_x()+20)
+                pdf.cell(74 ,5,'SubLocality',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,data[i][row]['SubLocality'] +', '+ data[i][row]['City'],0,1,'C',fill=True)
+                pdf.set_x(pdf.get_x()+20)
+                pdf.cell(74 ,5,'State',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,data[i][row]['State']+', '+ data[i][row]['Country'],0,1,'C',fill=True)
+                pdf.set_x(pdf.get_x()+20)
+                pdf.cell(74 ,5,'Labels',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,str(", ".join(data[i][row]['Labels'])),0,1,'C',fill=True)
+                pdf.set_x(pdf.get_x()+20)
+                pdf.cell(74 ,5,'Colors',0,0,'C',fill=True)
+                pdf.cell(2 ,5,'-',0,0,'C',fill=True)
+                pdf.cell(74 ,5,str(", ".join(data[i][row]['Colours'])),0,1,'C',fill=True)
+                pdf.cell(150, 10,'', 0, 2, 'C')
+                
+            if(i < len(data)-1):
+                pdf.add_page()
+    
+    return pdf.output(dest='S')
 
 
 '''-----------------------------------
@@ -134,7 +225,7 @@ def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
 -----------------------------------'''
 
 @report.route('/getreport/<oid>', methods=['GET'])
-# @jwt_required
+@jwt_required
 def getReport(oid):
     if oid == None:
         return jsonify({"success": False, "message": "No Object Id in param."}), 400
@@ -145,27 +236,90 @@ def getReport(oid):
         return dumps(reports), 200
 
 @report.route('/addreport', methods=['POST'])
-# @jwt_required
+@jwt_required
 def addReport():
     report = json.loads(request.data)
     if report == None:
         return jsonify({"success": False, "message": "No data found in request."}), 400
     # try:
+    timestamp = datetime.datetime.now()
+    report['Date'] = datetime.datetime.strftime(timestamp,"%d %B %Y, %A") 
+    report['Time'] = datetime.datetime.strftime(timestamp,"%I:%M %p") 
     res = db.report.insert_one(report)
     oid = res.inserted_id
 
     ## Oid received. Generate PDF Report from oid
-
-    return jsonify({"success": True, "report_link": "https:datapiratessih.github.io"}), 200
-    # except Exception as e:
-    #     return jsonify({"success": False, "message": "No data found in request."}), 400
-
-
+    newReport  = db.report.find_one({ "_id": ObjectId(oid)})
+    user = db.users.find_one({"_id": ObjectId(report['userId'])})
+    pdf_str = searchPDF_format(newReport, user)
+    response = make_response(pdf_str)
+    response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
+    response.mimetype = 'application/pdf'
+    return response, 200
 
 
 @report.route('/generatereport/<oid>', methods=['GET'])
-# @jwt_required
+@jwt_required
 def generateReport(oid):
+    try:
+        if oid == None or len(oid) != 24:
+            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+        elif "report" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection report."}), 404
+        else:
+            report  = db.report.find_one({ "_id": ObjectId(oid)})
+            user = db.users.find_one({"_id": ObjectId(report['userId'])})
+
+            #generate report
+            pdf_str = searchPDF_format(report, user)
+            response = make_response(pdf_str)
+            response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
+            response.mimetype = 'application/pdf'
+            return response, 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
+
+
+
+@report.route('/searchreport/<oid>', methods=['GET'])
+def search_report(oid):
+    try:
+        if oid == None or len(oid) != 24:
+            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+        elif "unique_person" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection features."}), 404
+        else:
+
+            
+            return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
+
+
+@report.route('/deletereport/<oid>', methods=['DELETE'])
+@jwt_required
+def deleteReport(oid):
+    if oid == None:
+            return jsonify({"success": False, "message": "No Object Id in param."}), 400
+    else:
+        if "report" not in db.list_collection_names():
+            return jsonify({"success": False, "message": "No Collection report."}), 404
+        else:
+            result = db.report.delete_one({"_id": ObjectId(oid)})
+            if (result.deleted_count) > 0:
+                return jsonify({"success": True, "message": "Report successfully deleted."}), 200
+            else: 
+                return jsonify({"success": False, "message": "Report with provided id doesn't exist."}), 404
+
+'''-----------------------------------
+            video-report
+-----------------------------------'''
+
+@report.route('/generatevideoreport/<oid>', methods=['GET'])
+@jwt_required
+def generateVideoReport(oid):
     try:
         if oid == None or len(oid) != 24:
             return jsonify({"success": False, "message": "No Object Id in param."}), 400
@@ -219,42 +373,10 @@ def generateReport(oid):
             piechart_buf = image_to_buffer(plt)
 
             #generate_pdf
-            videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf)
-            
-            return jsonify({"success": True, "report_link": "https:datapiratessih.github.io"}), 200
+            pdf_str = videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf)
+            response = make_response(pdf_str)
+            response.headers['Content-Disposition'] = "attachment; filename='report.pdf"
+            response.mimetype = 'application/pdf'
+            return response, 200
     except Exception as e:
         return f"An Error Occured: {e}"
-        
-
-
-
-    @video.route('/searchreport/<oid>', methods=['GET'])
-    def search_report(oid):
-        try:
-            if oid == None or len(oid) != 24:
-                return jsonify({"success": False, "message": "No Object Id in param."}), 400
-            elif "unique_person" not in db.list_collection_names():
-                return jsonify({"success": False, "message": "No Collection features."}), 404
-            else:
-
-                
-                return jsonify({"status": True, "message": "Report Generated", "Attachment": response}), 200
-        except Exception as e:
-            return f"An Error Occured: {e}"
-
-
-
-@report.route('/deletereport/<oid>', methods=['DELETE'])
-# @jwt_required
-def deleteReport(oid):
-    if oid == None:
-            return jsonify({"success": False, "message": "No Object Id in param."}), 400
-    else:
-        if "report" not in db.list_collection_names():
-            return jsonify({"success": False, "message": "No Collection report."}), 404
-        else:
-            result = db.report.delete_one({"_id": ObjectId(oid)})
-            if (result.deleted_count) > 0:
-                return jsonify({"success": True, "message": "Report successfully deleted."}), 200
-            else: 
-                return jsonify({"success": False, "message": "Report with provided id doesn't exist."}), 404

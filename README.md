@@ -55,3 +55,8 @@ Copy paste the output to requirements.txt
 ```bash
 deactivate
 ```
+
+## Uncomment
+```bash
+process.py line 13 and 14
+```

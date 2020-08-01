@@ -13,25 +13,21 @@ import time
 import numpy as np
 import ast
 import cv2
-import time
 import seaborn as sns
 import io
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from bson import ObjectId
 
-
-start = time.time()
-
 class PDF(FPDF):
     def header(self):
         # Logo
-        # self.image('logo512.png', 10, 8, 15)
+        self.image('logo512.png', 10, 8, 15)
         # Arial bold 15
         self.set_font('Arial', 'B', 15)
         # Move to the right
         self.cell(80)
         # Title
-        self.cell(30, 10, 'Gearstalk Report', 0, 0, 'C')
+        self.cell(30, 10, 'Gearstalk Search Report', 0, 0, 'C')
         # Line break
         self.ln(20)
 
@@ -47,144 +43,112 @@ class PDF(FPDF):
 client = MongoClient("mongodb+srv://admin:admin@cluster0-jnsfh.mongodb.net/test?retryWrites=true&w=majority")
 
 db = client.get_database('gearstalk')
+
 data = []
+dataframe = []
 
-feature = db.features.find_one({ "video_id": "5f05d0f814e6a15bdc797d12"})
-video = db.video.find({"_id" : ObjectId("5f05d0f814e6a15bdc797d12")})
-for x in video:
-    data.append(["Name of Video",x['name']])
-    data.append(["Date",x['date']])
-    data.append(["Time",x['time']])
-    data.append(["Duration of the video",x['duration']])
-    location = db.cctv.find({"_id" : ObjectId(x['location_id'])})
-    for y in location:
-        # data.append(["Address", y['formatted_address']])
-        data.append(["Street",y['street']])
-        data.append(["City", y['city']])
-        data.append(["State", y['state']])
-        data.append(["Country", y['country']])
-        data.append(['Postal Code', y['postal_code']])
-        data.append(["Latitude", y['latitude']])
-        data.append(["Longitude", y['longitude']])
+report = db.report.find_one({ "_id": ObjectId("5f23cd35fda6c3b001fa1b89")})
+# print(report['results'])
+# print
+for x in report['results']:
+    instance = []
+    # frame_sec = []
+    # time = []
+    # print(i['time']) 
+    # print(x)
+    if not x:
+        print("List is empty")
+    else:  
+        # print(x)
+        for i in x:
+            # print(i)
+            y = {}
+            y.update({'Date':i['date']})
+            y.update({'Time':i['time']})
+            y.update({'City':i['city']})
+            y.update({'SubLocality':i['sublocality']})
+            y.update({'State':i['state']})
+            y.update({'Country':i['country']})
+            # y.update({'Labels':i['labels']])
+            # y.update(['Colours':i['colors']])
+            instance.append(y)
+    data.append(instance)
+print(data)    
+    # data.append(mini_data)
+        # for i in mini_data:
+        #     print(i)
 
-
-image = []
-
-# #Line Chart
-line_chart_report = []
-Year = []
-Unemployment_Rate = []
-table_data = [["Frame Sec", "Number of People"]]
-line_chart = { x['frame_sec'] : len(json.loads(x['persons'])) for x in feature['metadata']}
-Year = list(line_chart.keys())
-Unemployment_Rate = list(line_chart.values())
-fig = plt.figure(figsize=(12,10), dpi= 80)
-plt.plot(Year, Unemployment_Rate)
-plt.title('Timestamp Vs No. of persons')
-plt.xlabel('Timestamp')
-plt.ylabel('No. of persons')
-# plt.savefig('plot.png')
-line_buf = io.BytesIO()
-plt.savefig(line_buf, format="png", dpi=180)
-image.append(line_buf)
-# print(png.getvalue())
-
-
-# #HeatMap
-
-data = db.unique_person.find({"video_id": "5f05d0f814e6a15bdc797d12"},{"labels":1, "colors":1,"_id":0})
-new_data = [ [x+','+y for x,y in zip(t['labels'],t['colors'])] for t in data]
-meta = [_ for i in range(len(new_data)) for _ in new_data[i]]
-cc = Counter(meta)
-colors = [ key.split(",")[1] for key in cc]
-# features = { {[key.split(",")[0]][key.split(",")[1]] : cc[key]} for key in cc}
-class AutoVivification(dict):
-    """Implementation of perl's autovivification feature."""
-    def __getitem__(self, item):
-        try:
-            return dict.__getitem__(self, item)
-        except KeyError:
-            value = self[item] = type(self)()
-            return value
-features=AutoVivification()
-for key in cc:
-        if key.split(",")[0] not in features.keys():
-                for x in colors:
-                        features[key.split(",")[0]][x] = 0
-        features[key.split(",")[0]][key.split(",")[1]] = cc[key]
-corr = [ list(val.values()) for val in features.values()]
-# print(list(features.keys()),list(features.values())[0].keys(),corr,time.time()-start)
-fig = plt.figure(figsize=(12,10), dpi= 80)
-sns.heatmap(corr, xticklabels=list(list(features.values())[0].keys()), yticklabels=list(features.keys()), cmap='RdYlGn', center=0, annot=True)
-# Decorations
-plt.title('Relationship between Labels and resp. Colors', fontsize=14)
-plt.xticks(fontsize=8)
-plt.yticks(fontsize=8)
-# plt.show()
-heatmap_buf = io.BytesIO()
-plt.savefig(heatmap_buf, format="png", dpi=180)
-image.append(heatmap_buf)
-
-
-# #Pie Chart
-
-pie_chart = Counter(list(chain(*[ list(chain(*[ x['labels'] for x in json.loads(metadata['persons'])])) for metadata in feature['metadata']])))
-# print(list(pie_chart.values()))
-fig = plt.figure()
-ax = fig.add_axes([0,0,1,1])
-ax.axis('equal')
-ax.pie(list(pie_chart.values()), labels = list(pie_chart.keys()),autopct='%1.2f%%')
-pie_buf = io.BytesIO()
-plt.savefig(pie_buf, format="png", dpi=180)
-image.append(pie_buf)
-# plt.show()
-
-
+# for i in data:
+#     print(i)
+# print(data)
 
 
 pdf=PDF()
 pdf.alias_nb_pages()
 pdf.add_page()
-image_w = 100
-image_h = 80
+
+pdf.set_font('Arial','B',15)
+pdf.cell(71 ,5,'TimeStamp',0,0)
+pdf.cell(59 ,5,'',0,0)
+pdf.cell(59 ,5,'Details',0,1)
+
+pdf.set_font('Arial','',10)
+
+pdf.cell(130 ,5,'Date: {}'.format("12th Jan 2019"),0,0)
+pdf.cell(25 ,5,'User ID:',0,0)
+pdf.cell(34 ,5,'gearstalk@gmail.com',0,1)
+
+pdf.cell(130 ,5,'Time: {}'.format("12.01pm"),0,0)
+pdf.cell(25 ,5,'UserName:',0,0)
+pdf.cell(34 ,5,'GearStalk',0,1)
+ 
+pdf.cell(130 ,5,'',0,0)
+pdf.cell(25 ,5,'Report No:',0,0)
+pdf.cell(34 ,5,'ORD001',0,1)
+
 pdf.set_font('Times','B',14.0) 
+# th = pdf.font_size
+# epw = pdf.w - 2*pdf.l_margin
+# col_width = epw/2
+pdf.cell(0,20, "Search Results", 0, 2, 'C')
+for i in range(len(data)):
+    pdf.set_font('Times','',14.0) 
+    pdf.set_fill_color(120,250,140)
+    pdf.cell(150, 10, 'Personal Details', 1, 2, 'C', fill=True)
+    pdf.set_xy(pdf.get_x() + 5, pdf.get_y() + 5)
+    if i == []:
+        pdf.cell(0,10,"The person "+str(i)+" is not found ", 0, 1, "L")
+    else:
+        pdf.cell(180, 8, "qwerty", 0, 1, "L")
+        pdf.set_xy(pdf.get_x() + 5, pdf.get_y() + 5)
+        pdf.cell(0,10,"The number of Persons found with the provided details of clothing attributes are " + str(len(data[i])), 0, 1, "L")
+        # print("The number of Persons found with the provided details of clothing attributes are " + str(len(data[i])))
+        # print(data[i])
+        for row in range(len(data[i])):
+            # Enter data in colums
+            print(data[i][row]['Date'])
+            pdf.set_xy(pdf.get_x() + 5, pdf.get_y() + 5)
+            pdf.cell(0,15, "Details of the Instance " + str(row)+ " of Person " + str(i)+ " are:", 0, 1 , 'L')
+            # print(row['Date'])
+            # print("The selected person was found on "+ row['Date']+" at " +row['Time']+ ". The Camera spotted the person at "+row['SubLocality']+ ", " +row['City']+ ", "+row['State']+ ", "+row['Country']+ ". The Person is found wearing the searched clothes.")
+            pdf.set_xy(pdf.get_x() + 5, pdf.get_y() + 5)
+            pdf.multi_cell(0,10, "The selected person was found on "+ data[i][row]['Date']+" at " +data[i][row]['Time']+ ". The Camera spotted the person at "+data[i][row]['SubLocality']+ ", " +data[i][row]['City']+ ", "+data[i][row]['State']+ ", "+data[i][row]['Country']+ ". The Person is found wearing the searched clothes.",0, 3, "L")
+            pdf.ln(28)
+            # Notice the use of the function str to coerce any input to the 
+            # string type. This is needed
+            # since pyFPDF expects a string, not a number.
+            # pdf.cell(col_width, 2*th, "Hello "+str(datum), border=1, align = 'C')
+        
+            # pdf.ln(2*th)
+        if(i < len(data)-1):
+            pdf.add_page()
+pdf.output('table.pdf','F')
 
-pdf.cell(0, 30, txt="A Tabular and Graphical Report of number of people identified in the video", ln = 1, align = 'C')
-
-image_w = 140
-image_h = 140
 
 
-df = pd.DataFrame(data,columns=['Question','Answer'])
-# print(df)
-
-for i in range(0, len(df)):
-    pdf.cell(80, 18, '%s' % (df['Question'].iloc[i]), 1, 0, 'C')
-    pdf.cell(110, 18, '%s' % (df['Answer'].iloc[i]), 1, 1, 'C')
-    # pdf.cell(-90)
-
-pdf.add_page()
-pdf.cell(0, 30, txt="A Tabular and Graphical Report of number of people identified in the video", ln = 1, align = 'C')
-pdf.image(image[0], x=35, y=60, w=image_w, h=image_h)
-pdf.ln(1*image_h+15)
-pdf.multi_cell(0,10, "A line graph is a graphical display of information that changes continuously over time. In this case the graph displays the number of people in the video at particular timestamps. ",0, 3 , 'L')
-pdf.ln(30)
-pdf.cell(0,10," Maximum Number of people in any frame of the video = {}".format(max(line_chart.values())) , 0, 1, "L")
 
 
-pdf.add_page()
-pdf.cell(0, 30, txt="A Tabular and Graphical Report of Realation between labels and colors in the video", ln = 1, align = 'C')
-pdf.image(image[1], x=25, y=70, w=image_w + 40, h=image_h)
-pdf.ln(1*image_h+15)
-pdf.multi_cell(0,10,'The heat map is a data visualization technique that shows magnitude of a phenomenon as colour in two dimensions. This one in particular highlights the relationship between labels and their respective colours. The colours of respective clothing accessories like jeans,shirts,sweaters,etc range from various hues of grey,blue,brown and silver. Upon observation, we can conclude that the intensity of rosy brown jeans was the highest while dark grey scarfs and jeans were comparable as well.', 0, 1,'L')
-
-pdf.add_page()
-pdf.cell(0, 30, txt="A Tabular and Graphical Report of Realation between labels and colors in the video", ln = 1, align = 'C')
-pdf.image(image[2], x=25, y=70, w=image_w + 40, h=image_h)
-pdf.ln(1*image_h+15)
-pdf.multi_cell(0,10,"This pie chart shows the result of a cctv surveillance camera, scanned frame by frame for clothing attributes. The video showcased a number of people wearing various clothing accessories. The different attributes identified are blazers, jeans, sweaters, scarfs, sarees, caps, shirts, jerseys, pants, etc. The pie chart above shows that majority people were wearing sweaters,scarfs and jeans; thereby hinting towards a possibility of cold climate.", 0, 1, 'L')
-
-
-pdf.output('table-using-cell-borders.pdf','f')
-
-print(time.time()-start)
+# Bar Chart: It Illustrates the number of people wearing a particular type of clothing
+# Line Chart: The graph shows how crowded the area is, at a specific time frame.
+# Pie Chart: The graph shows the overall overview of the footage with labels and their colors at a specific time frame.
+# Toggle Chart: The Illustrates the correlation between a particular type of clothing and their respective colors.
