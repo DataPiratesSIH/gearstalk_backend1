@@ -35,5 +35,8 @@ jobs:
         script: |
           cd /app/gearstalk_backend1
           git pull
+          docker container stop $(docker container ls -aq)
+          docker container rm $(docker container ls -aq)
+          docker system prune -a
           docker-compose up -d --build
 
