@@ -3,6 +3,8 @@ from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 import json,requests
 from utils.connect import client, db, fs
 import datetime 
+import bcrypt
+
 auth = Blueprint("auth", __name__)
 authEmails = ['elvis8333', 'mahendrasir', 'amurto8317', 'bhate8318', 'carol8320', 'mahesh8328', 'sherwin8358', 'cassia8374']
 @auth.route("/signup", methods=["POST"])
@@ -23,7 +25,8 @@ def register():
     if test:
         return jsonify({"success": False, "message": "User Already Exist."}), 409
     else:
-        user_info = dict(first_name=first_name, last_name=last_name, email=email, password=password)
+        hashpass = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        user_info = dict(first_name=first_name, last_name=last_name, email=email, password=hashpass)
         inserted = db.users.insert_one(user_info)
         expires = datetime.timedelta(days=365)
         access_token = create_access_token(identity=email, expires_delta=expires) #token
@@ -37,10 +40,13 @@ def login():
     password = user.get("password")
     if email == None or password == None:
         return jsonify({"success": False, "message": "Fields are empty."}), 401
-    test = db.users.find_one({"email": email, "password": password})
+    test = db.users.find_one({"email": email})
     if test:
-        expires = datetime.timedelta(days=365)
-        access_token = create_access_token(identity=email, expires_delta=expires) #token
-        return jsonify({"success": True, "message": "Login Succeeded!", "userId": str(test["_id"]), "token": access_token}), 201
+        if bcrypt.hashpw(password.encode('utf-8'), test['password'].decode().encode('utf-8')) == test['password'].decode().encode('utf-8'):
+            expires = datetime.timedelta(days=365)
+            access_token = create_access_token(identity=email, expires_delta=expires) #token
+            return jsonify({"success": True, "message": "Login Succeeded!", "userId": str(test["_id"]), "token": access_token}), 201
+        else:
+            return jsonify({"success": False, "message": "Bad Password"}), 401
     else:
-        return jsonify({"success": False, "message": "Bad Email or Password"}), 401
+        return jsonify({"success": False, "message": "Bad Email"}), 401
