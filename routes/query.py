@@ -61,8 +61,9 @@ def nearest_colour( subjects, query ):
 def search():
     try:
         data = request.get_json()
-        video_id = data['video_id']
-        print(data['attributes'])
+        videos = data['videos']
+        # print(data['attributes'])
+        # print(videos)
         new_attributes = []
         for a in data['attributes']:
             labels = [x.lower() for x in a['labels']]
@@ -71,8 +72,10 @@ def search():
                 continue
             else:
                 best_match = []
-                for ids in video_id:
-                    ids_match = list(db.unique_person.find({"video_id": ids, "labels": {"$in": labels}, "colors": {"$in": colors}},{"_id":0}).limit(2))
+                for ids in videos:
+                    print(datetime(ids["start"]["y"],ids["start"]["M"],ids["start"]["d"],ids["start"]["h"],ids["start"]["m"],ids["start"]["s"],0))
+                    print(datetime(ids["end"]["y"],ids["end"]["M"],ids["end"]["d"],ids["end"]["h"],ids["end"]["m"],ids["end"]["s"],0))
+                    ids_match = list(db.unique_person.find({"video_id": ids["id"], "labels": {"$in": labels}, "colors": {"$in": colors}},{"_id":0}).limit(2))
                     best_match.append(ids_match)
                 new_attributes.append(best_match)
         print(itertools.chain(*new_attributes))
