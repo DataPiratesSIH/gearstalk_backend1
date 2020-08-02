@@ -337,8 +337,8 @@ def generateVideoReport(oid):
             #plotting
             plt.plot(list(line_chart.keys()), list(line_chart.values()))
             plt.title('TimeFrame Vs No. of persons')
-            plt.xlabel('No. of persons')
-            plt.ylabel('TimeFrame')
+            plt.xlabel('TimeFrame')
+            plt.ylabel('No. of persons')
             linechart_buf = image_to_buffer(plt)
 
 
