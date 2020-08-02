@@ -108,7 +108,7 @@ def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
     pdf.cell(0, 30, txt="A Tabular and Graphical Report of number of people identified in the video", ln = 1, align = 'C')
     pdf.image(piechart_buf, x=35, y=60, w=image_w, h=image_h)
     pdf.ln(1*image_h+15)
-    pdf.multi_cell(0,10, "This pie chart shows the result of a cctv surveillance camera, scanned frame by frame for clothing attributes. The video showcased a number of people wearing various clothing accessories. The different attributes identified are blazers, jeans, sweaters, scarfs, sarees, caps, shirts, jerseys, pants, etc. The pie chart above shows that majority people were wearing sweaters,scarfs and jeans; thereby hinting towards a possibility of cold climate.",0, 3 , 'L')
+    pdf.multi_cell(0,10, "This pie chart shows the result of a cctv surveillance camera, scanned frame by frame for clothing attributes. The video showcased a number of people wearing various clothing accessories. The different attributes identified are blazers, jeans, sweaters, scarfs, sarees, caps, shirts, jerseys, pants, etc.",0, 3 , 'L')
     
 
 
@@ -116,7 +116,7 @@ def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
     pdf.cell(0, 30, txt="A Tabular and Graphical Report of Realation between labels and colors in the video", ln = 1, align = 'C')
     pdf.image(heatmap_buf, x=25, y=70, w=image_w + 40, h=image_h)
     pdf.ln(1*image_h+15)
-    pdf.multi_cell(0,10,'The heat map is a data visualization technique that shows magnitude of a phenomenon as colour in two dimensions. This one in particular highlights the relationship between labels and their respective colours. The colours of respective clothing accessories like jeans,shirts,sweaters,etc range from various hues of grey,blue,brown and silver. Upon observation, we can conclude that the intensity of rosy brown jeans was the highest while dark grey scarfs and jeans were comparable as well.', 0, 1,'L')
+    pdf.multi_cell(0,10,'The heat map is a data visualization technique that shows magnitude of a phenomenon as colour in two dimensions. This one in particular highlights the relationship between labels and their respective colours. The colours of respective clothing accessories like jeans,shirts,sweaters,etc range from various hues of grey,blue,brown and silver.', 0, 1,'L')
     
     pdf.add_page()
     pdf.cell(0, 30, txt="A Tabular and Graphical Report of Realation between labels and colors in the video", ln = 1, align = 'C')
