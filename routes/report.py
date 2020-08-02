@@ -67,7 +67,7 @@ def image_to_buffer(plt_image):
     return buf
 
 
-def videoPDF_format(video,line_chart,image_array):
+def videoPDF_format(video,line_chart,linechart_buf,heatmap_buf,piechart_buf):
     pdf=PDF()
     pdf.alias_nb_pages()
     pdf.add_page()
