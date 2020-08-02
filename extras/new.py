@@ -48,8 +48,13 @@ db = client.get_database('gearstalk')
 data = []
 dataframe = []
 
-# rep = [x['video_id'] for x in list(db.features.find({},{"video_id":1,"_id":0,"timestamp":1}))]
-# print(repost)
+import datetime
+start_time = datetime.datetime(2020,6,17,12,30,20)
+end_time = datetime.datetime(2020,6,17,12,30,44)
+print(start_time,end_time)
+
+rep = [x['video_id'] for x in list(db.unique_person.find({'timestamp': {'$gte': start_time}, 'timestamp': {'$lte': end_time}}))]
+print(rep)
 
 # repost = db.unique_person.update({"_id": ObjectId("5f118cddf40c15ad6eccd5c1")},"$set": { "timestamp": "Minnie" })
 # repost = list(db.unique_person.find({}))
@@ -60,7 +65,7 @@ dataframe = []
 #     db.unique_person.update_one({"_id": repost[i]['_id']}, {"$set": { "timestamp": datetime.strptime(str(repost[i]['date']+repost[i]['time']), "%Y-%m-%d%H:%M:%S") }})
 # print(ss)
 
-print(list(db.unique_person.find({'timestamp': {"$lt": datetime(2020, 7, 17, 12, 38, 21)}})))
+# print(list(db.unique_person.find({'timestamp': {"$lt": datetime(2020, 7, 17, 12, 38, 21)}})))
 
 
 # result = list(db.unique_person.find({"video_id" : {"$nin": repost}}))
