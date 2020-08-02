@@ -73,14 +73,17 @@ def search():
             else:
                 best_match = []
                 for ids in videos:
-                    start_time = datetime(ids["start"]["y"],ids["start"]["M"],ids["start"]["d"],ids["start"]["h"],ids["start"]["m"],ids["start"]["s"],0)
-                    end_time = datetime(ids["end"]["y"],ids["end"]["M"],ids["end"]["d"],ids["end"]["h"],ids["end"]["m"],ids["end"]["s"],0)
+                    start_time = datetime(int(ids["start"]["y"]),int(ids["start"]["M"])+1,int(ids["start"]["d"]),int(ids["start"]["h"]),int(ids["start"]["m"]),int(ids["start"]["s"]))
+                    end_time = datetime(int(ids["end"]["y"]),int(ids["end"]["M"])+1,int(ids["end"]["d"]),int(ids["end"]["h"]),int(ids["end"]["m"]),int(ids["end"]["s"]))
+                    
+                    ids_match2 = list(db.unique_person.find({"video_id": ids["id"], "labels": {"$in": labels}, "colors": {"$in": colors},'timestamp': {'$gte': start_time},'timestamp': {'$lte': end_time}},{"_id":0}).limit(2))
 
-                    ids_match = list(db.unique_person.find({"video_id": ids["id"], "labels": {"$in": labels}, "colors": {"$in": colors}, 'timestamp': {"$lt": end_time, "$gt": start_time}},{"_id":0}).limit(2))
-                    best_match.append(ids_match)
+                    best_match += ids_match2
+                # print(best_match)
+                # print(list(itertools.chain(*best_match))
                 new_attributes.append(best_match)
-        print(itertools.chain(*new_attributes))
-        return dumps(itertools.chain(*new_attributes)),200
+        # print(list(itertools.chain(*new_attributes)))
+        return dumps(new_attributes),200
     except Exception as e:
         print(e)
         return f"An Error Occured: {e}", 404
