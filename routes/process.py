@@ -10,8 +10,8 @@ from utils.connect import db, fs
 from utils.utils import getFrame, randomString, processor
 from flask_executor import Executor
 from datetime import datetime
-import utils.classification as cf
-import utils.colorize as cl
+# import utils.classification as cf
+# import utils.colorize as cl
 from utils.colorlist import colours
 import json
 import collections
@@ -29,6 +29,13 @@ def rgb2hex(r, g, b): return f"#{r:02x}{g:02x}{b:02x}"
     breaking video down to frames and processing
 --------------------------------------------------'''
 
+@process.route('/streamvideo', methods=['POST'])
+def streamVideo():
+    data = json.loads(request.data)
+    ip = data.get("ip")
+    location = data.get("location")
+    print(ip, location)
+    return jsonify({ "success":True}), 200
 
 @process.route('/processvideo/<oid>', methods=['GET'])
 @jwt_required
